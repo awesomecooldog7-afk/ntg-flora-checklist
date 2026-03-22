@@ -222,6 +222,17 @@
             background: white;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin: 0;
+            accent-color: #4a7c2c;
         }
 
         .gallery-empty {
@@ -1805,6 +1816,7 @@
                             ${photos.length > 0 ? `<button class="icon-btn" onclick="viewPhoto('${itemId}', 0)" title="View photos (${photos.length})">📷 ${photos.length}</button>` : ''}
                             <button class="icon-btn" onclick="addPhoto('${itemId}')" title="Add photo">📷</button>
                             <button class="icon-btn" onclick="editPageNumber('${itemId}')" title="Edit page number">${page || '📄'}</button>
+                            <button class="icon-btn" onclick="handleCheckboxChange('${itemId}', false)" title="Deselect species" style="background:#dc3545;color:white;">✕</button>
                         </div>
                     </div>
                 `;
@@ -1901,8 +1913,12 @@
 
         async function handleCheckboxChange(itemId, checked) {
             await setChecked(itemId, checked);
+            
+            // Always update both pages to keep them in sync
             await renderSelectedSpecies();
             await updateStats();
+            await renderSpecies();  // Update home page checkboxes
+            await renderGallery();  // Update gallery checkboxes
         }
 
         async function updatePageNumber(itemId, page) {
@@ -1932,6 +1948,7 @@
                 });
             }
             
+            // Home page filters
             const homeFilters = document.getElementById('home-page')?.querySelector('.filter-tabs');
             if (homeFilters) {
                 homeFilters.addEventListener('click', async (e) => {
@@ -1961,6 +1978,40 @@
                         }
                         
                         await renderSpecies();
+                    }
+                });
+            }
+            
+            // Gallery page filters
+            const galleryFilterTabs = document.getElementById('gallery-filters');
+            if (galleryFilterTabs) {
+                galleryFilterTabs.addEventListener('click', async (e) => {
+                    if (e.target.classList.contains('filter-tab')) {
+                        const filter = e.target.dataset.filter;
+                        
+                        if (filter === 'all') {
+                            galleryFilters = new Set(['all']);
+                            document.querySelectorAll('#gallery-filters .filter-tab').forEach(tab => {
+                                tab.classList.toggle('active', tab.dataset.filter === 'all');
+                            });
+                        } else {
+                            galleryFilters.delete('all');
+                            if (galleryFilters.has(filter)) {
+                                galleryFilters.delete(filter);
+                                e.target.classList.remove('active');
+                            } else {
+                                galleryFilters.add(filter);
+                                e.target.classList.add('active');
+                            }
+                            document.querySelector('#gallery-filters .filter-tab[data-filter="all"]')?.classList.remove('active');
+                            
+                            if (galleryFilters.size === 0) {
+                                galleryFilters = new Set(['all']);
+                                document.querySelector('#gallery-filters .filter-tab[data-filter="all"]')?.classList.add('active');
+                            }
+                        }
+                        
+                        await renderGallery();
                     }
                 });
             }
@@ -2216,10 +2267,26 @@
             let html = '';
             
             for (const category of ['grasses', 'forbs', 'sedges']) {
+                // Check category filter
+                if (!galleryFilters.has('all') && !galleryFilters.has(category)) {
+                    continue;
+                }
+                
                 const allSpecies = [...speciesData[category], ...customSpecies[category]];
                 
                 for (let i = 0; i < allSpecies.length; i++) {
                     const species = allSpecies[i];
+                    
+                    // Check status filters
+                    const nativeMatch = galleryFilters.has('native') && species.status === 'native';
+                    const exoticMatch = galleryFilters.has('exotic') && species.status === 'exotic';
+                    const indicatorMatch = galleryFilters.has('indicator') && species.indicator;
+                    const statusMatch = !galleryFilters.has('native') && !galleryFilters.has('exotic') && !galleryFilters.has('indicator');
+                    
+                    if (!statusMatch && !nativeMatch && !exoticMatch && !indicatorMatch) {
+                        continue;
+                    }
+                    
                     const isCustom = i >= speciesData[category].length;
                     const itemId = isCustom ? 
                         `custom-${category}-${i - speciesData[category].length}` : 
@@ -2246,7 +2313,7 @@
                 }
             }
             
-            container.innerHTML = html || '<div class="empty-message">No photos yet. Add photos from the home page.</div>';
+            container.innerHTML = html || '<div class="empty-message">No photos match the current filters.</div>';
         }
 
 
