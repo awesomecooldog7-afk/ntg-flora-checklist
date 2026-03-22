@@ -1769,15 +1769,21 @@
         // Render functions
         async function renderSelectedSpecies() {
             const container = document.getElementById('selected-species-list');
-            const keys = await dbManager.getAllKeys(STORES.selections);
-            
-            if (keys.length === 0) {
-                container.innerHTML = '<div class="empty-message">No species selected yet. Check the boxes below to add species.</div>';
-                document.getElementById('selected-species-header').style.display = 'none';
+            if (!container) {
+                console.warn('selected-species-list element not found');
                 return;
             }
             
-            document.getElementById('selected-species-header').style.display = 'flex';
+            const keys = await dbManager.getAllKeys(STORES.selections);
+            const header = document.getElementById('selected-species-header');
+            
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="empty-message">No species selected yet. Check the boxes below to add species.</div>';
+                if (header) header.style.display = 'none';
+                return;
+            }
+            
+            if (header) header.style.display = 'flex';
             
             let html = '';
             for (const itemId of keys) {
@@ -1808,6 +1814,11 @@
 
         async function renderSpecies() {
             const container = document.getElementById('species-list');
+            if (!container) {
+                console.warn('species-list element not found');
+                return;
+            }
+            
             let html = '';
             
             for (const category of ['grasses', 'forbs', 'sedges']) {
@@ -2132,7 +2143,7 @@
 
         // Navigation
         function toggleMenu() {
-            const menu = document.getElementById('hamburger-menu');
+            const menu = document.getElementById('menu-modal');
             if (menu) {
                 menu.classList.toggle('active');
             } else {
