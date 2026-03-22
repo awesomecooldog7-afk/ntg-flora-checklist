@@ -1745,45 +1745,46 @@
                 }
             }
             
-            // Update stats display
-            const statTotal = document.getElementById('stat-total');
-            const statRecorded = document.getElementById('stat-recorded');
-            const statNative = document.getElementById('stat-native');
-            const statExotic = document.getElementById('stat-exotic');
+            // Update stats display - using correct IDs from HTML
+            const totalEl = document.getElementById('total-count');
+            const checkedEl = document.getElementById('checked-count');
+            const nativeEl = document.getElementById('native-count');
+            const exoticEl = document.getElementById('exotic-count');
             
-            if (statTotal) statTotal.textContent = totalSpeciesCount;
-            if (statNative) statNative.textContent = nativeCount;
-            if (statExotic) statExotic.textContent = exoticCount;
-            
-            // Count recorded (species with photos or page numbers)
-            let recordedCount = 0;
-            const photoKeys = await dbManager.getAllKeys(STORES.photos);
-            const pageKeys = await dbManager.getAllKeys(STORES.pageNumbers);
-            const allKeys = [...new Set([...photoKeys, ...pageKeys])];
-            recordedCount = allKeys.length;
-            
-            if (statRecorded) statRecorded.textContent = recordedCount;
+            if (totalEl) totalEl.textContent = totalSpeciesCount;
+            if (checkedEl) checkedEl.textContent = checkedCount;
+            if (nativeEl) nativeEl.textContent = nativeCount;
+            if (exoticEl) exoticEl.textContent = exoticCount;
         }
 
 
         // Render functions
         async function renderSelectedSpecies() {
-            const container = document.getElementById('selected-species-list');
+            const container = document.getElementById('selected-list');
             if (!container) {
-                console.warn('selected-species-list element not found');
+                console.warn('selected-list element not found');
                 return;
             }
             
             const keys = await dbManager.getAllKeys(STORES.selections);
-            const header = document.getElementById('selected-species-header');
+            const section = document.getElementById('selected-section');
+            const countEl = document.getElementById('selected-count');
+            
+            if (countEl) countEl.textContent = keys.length;
             
             if (keys.length === 0) {
                 container.innerHTML = '<div class="empty-message">No species selected yet. Check the boxes below to add species.</div>';
-                if (header) header.style.display = 'none';
+                if (section) {
+                    section.style.display = 'none';
+                    section.classList.remove('has-items');
+                }
                 return;
             }
             
-            if (header) header.style.display = 'flex';
+            if (section) {
+                section.style.display = 'block';
+                section.classList.add('has-items');
+            }
             
             let html = '';
             for (const itemId of keys) {
@@ -1835,6 +1836,12 @@
                 for (let i = 0; i < allSpecies.length; i++) {
                     const species = allSpecies[i];
                     if (!matchesStatusFilter(species.status, species.indicator)) continue;
+                    
+                    // Search filter
+                    if (searchTerm && !species.scientific.toLowerCase().includes(searchTerm) && 
+                        !species.common.toLowerCase().includes(searchTerm)) {
+                        continue;
+                    }
                     
                     const isCustom = i >= speciesData[category].length;
                     const itemId = isCustom ? 
@@ -1913,7 +1920,18 @@
 
 
         // Filter handling
+        let searchTerm = '';
+        
         document.addEventListener('DOMContentLoaded', () => {
+            // Search input handler
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', async (e) => {
+                    searchTerm = e.target.value.toLowerCase();
+                    await renderSpecies();
+                });
+            }
+            
             const homeFilters = document.getElementById('home-page')?.querySelector('.filter-tabs');
             if (homeFilters) {
                 homeFilters.addEventListener('click', async (e) => {
@@ -2143,11 +2161,24 @@
 
         // Navigation
         function toggleMenu() {
+            console.log('toggleMenu called');
+            console.log('Document ready state:', document.readyState);
             const menu = document.getElementById('menu-modal');
+            console.log('Menu element:', menu);
+            
             if (menu) {
                 menu.classList.toggle('active');
+                console.log('Menu toggled, active:', menu.classList.contains('active'));
             } else {
-                console.warn('Menu element not found');
+                console.error('Menu element #menu-modal not found in DOM');
+                console.log('Available elements with id:', 
+                    Array.from(document.querySelectorAll('[id]')).map(el => el.id));
+            }
+        }
+
+        function closeMenuOnOutsideClick(event) {
+            if (event.target.id === 'menu-modal') {
+                toggleMenu();
             }
         }
 
