@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2565,6 +2566,16 @@ const speciesData = {
             });
         }
 
+    
+        // Register Service Worker AFTER app is initialized
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('✓ Service Worker registered'))
+                    .catch(err => console.warn('Service Worker failed:', err));
+            });
+        }
+    
     </script>
 </body>
 </html>
