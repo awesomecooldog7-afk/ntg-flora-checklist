@@ -1148,6 +1148,22 @@
                     <button class="filter-tab" data-filter="indicator">Indicators</button>
                 </div>
             </div>
+            
+            <!-- Selected Species Section (same as home page) -->
+            <div class="selected-section" id="gallery-selected-section">
+                <div class="selected-header">
+                    <div class="selected-header-left">
+                        <span>✓ Selected Species</span>
+                        <span class="selected-count" id="gallery-selected-count">0</span>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="deselect-all-btn" onclick="copyIndicators()" title="Copy scientific names of selected indicator species">📋 Copy Indicators</button>
+                        <button class="deselect-all-btn" onclick="deselectAll()">Deselect All</button>
+                    </div>
+                </div>
+                <div class="selected-list" id="gallery-selected-list"></div>
+            </div>
+            
             <div class="gallery-grid" id="gallery-grid"></div>
         </div>
 
@@ -1155,8 +1171,11 @@
         <div class="page" id="saved-lists-page">
             <div class="controls">
                 <h2 style="margin: 0 0 20px 0;">Survey Lists</h2>
-                <button class="add-btn" onclick="openSaveListModal()" style="width: 100%; margin-bottom: 20px;">
+                <button class="add-btn" onclick="openSaveListModal()" style="width: 100%; margin-bottom: 12px;">
                     💾 Save Current Selection as List
+                </button>
+                <button class="add-btn" onclick="exportAllListsAsTable()" style="width: 100%; background: #2196F3;">
+                    📊 Export All Lists as CSV
                 </button>
             </div>
             <div id="saved-lists-container"></div>
@@ -1179,15 +1198,6 @@
                 <div class="menu-item" onclick="navigateTo('saved-lists')">
                     <span class="menu-item-icon">📋</span>
                     <span>Saved Lists</span>
-                </div>
-                <div style="border-top: 1px solid #e0e0e0; margin: 8px 0;"></div>
-                <div class="menu-item" onclick="exportData(); toggleMenu();">
-                    <span class="menu-item-icon">📤</span>
-                    <span>Export Data</span>
-                </div>
-                <div class="menu-item" onclick="openImportModal(); toggleMenu();">
-                    <span class="menu-item-icon">📥</span>
-                    <span>Import Data</span>
                 </div>
             </div>
         </div>
@@ -1771,30 +1781,45 @@
 
         // Render functions
         async function renderSelectedSpecies() {
-            const container = document.getElementById('selected-list');
-            if (!container) {
-                console.warn('selected-list element not found');
-                return;
-            }
+            // Render for both home and gallery pages
+            const homeContainer = document.getElementById('selected-list');
+            const galleryContainer = document.getElementById('gallery-selected-list');
             
             const keys = await dbManager.getAllKeys(STORES.selections);
-            const section = document.getElementById('selected-section');
-            const countEl = document.getElementById('selected-count');
             
-            if (countEl) countEl.textContent = keys.length;
+            // Update counts
+            const homeCountEl = document.getElementById('selected-count');
+            const galleryCountEl = document.getElementById('gallery-selected-count');
+            if (homeCountEl) homeCountEl.textContent = keys.length;
+            if (galleryCountEl) galleryCountEl.textContent = keys.length;
+            
+            // Update sections visibility
+            const homeSection = document.getElementById('selected-section');
+            const gallerySection = document.getElementById('gallery-selected-section');
             
             if (keys.length === 0) {
-                container.innerHTML = '<div class="empty-message">No species selected yet. Check the boxes below to add species.</div>';
-                if (section) {
-                    section.style.display = 'none';
-                    section.classList.remove('has-items');
+                const emptyHtml = '<div class="empty-message">No species selected yet. Check the boxes below to add species.</div>';
+                if (homeContainer) homeContainer.innerHTML = emptyHtml;
+                if (galleryContainer) galleryContainer.innerHTML = emptyHtml;
+                
+                if (homeSection) {
+                    homeSection.style.display = 'none';
+                    homeSection.classList.remove('has-items');
+                }
+                if (gallerySection) {
+                    gallerySection.style.display = 'none';
+                    gallerySection.classList.remove('has-items');
                 }
                 return;
             }
             
-            if (section) {
-                section.style.display = 'block';
-                section.classList.add('has-items');
+            if (homeSection) {
+                homeSection.style.display = 'block';
+                homeSection.classList.add('has-items');
+            }
+            if (gallerySection) {
+                gallerySection.style.display = 'block';
+                gallerySection.classList.add('has-items');
             }
             
             let html = '';
@@ -1822,7 +1847,9 @@
                 `;
             }
             
-            container.innerHTML = html;
+            // Populate both home and gallery selected lists
+            if (homeContainer) homeContainer.innerHTML = html;
+            if (galleryContainer) galleryContainer.innerHTML = html;
         }
 
         async function renderSpecies() {
@@ -2444,6 +2471,7 @@
                     </div>
                     <div class="saved-list-actions">
                         <button class="saved-list-btn view" onclick="viewListDetails(${list.id})">View Full List</button>
+                        <button class="saved-list-btn" onclick="exportListAsTable(${list.id})" style="background:#2196F3;">Export CSV</button>
                         <button class="saved-list-btn delete" onclick="deleteList(${list.id})">Delete</button>
                     </div>
                 </div>
@@ -2468,6 +2496,78 @@
                 await dbManager.set(STORES.savedLists, 'lists', savedLists);
                 await renderSavedLists();
             }
+        }
+
+        // Export individual list as CSV table
+        function exportListAsTable(listId) {
+            const list = savedLists.find(l => l.id === listId);
+            if (!list) return;
+
+            // Create CSV content with header
+            let csv = 'Title,Date,Species,Latitude,Longitude,Comments\n';
+            
+            // All species in one row, separated by ', '
+            const speciesList = list.species.map(sp => sp.scientific).join(', ');
+            const lat = list.gps ? list.gps.split(',')[0].trim() : '';
+            const lng = list.gps ? list.gps.split(',')[1]?.trim() || '' : '';
+            
+            const row = [
+                `"${list.title}"`,
+                `"${new Date(list.date).toLocaleDateString('en-AU')}"`,
+                `"${speciesList}"`,
+                lat,
+                lng,
+                `"${list.notes || ''}"`
+            ].join(',');
+            
+            csv += row + '\n';
+
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${list.title.replace(/[^a-z0-9]/gi, '_')}_${list.date}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Export all lists as CSV table
+        function exportAllListsAsTable() {
+            if (savedLists.length === 0) {
+                alert('No saved lists to export');
+                return;
+            }
+
+            // Create CSV content with header
+            let csv = 'Title,Date,Species,Latitude,Longitude,Comments\n';
+            
+            // One row per list, all species separated by ', '
+            savedLists.forEach(list => {
+                const speciesList = list.species.map(sp => sp.scientific).join(', ');
+                const lat = list.gps ? list.gps.split(',')[0].trim() : '';
+                const lng = list.gps ? list.gps.split(',')[1]?.trim() || '' : '';
+                
+                const row = [
+                    `"${list.title}"`,
+                    `"${new Date(list.date).toLocaleDateString('en-AU')}"`,
+                    `"${speciesList}"`,
+                    lat,
+                    lng,
+                    `"${list.notes || ''}"`
+                ].join(',');
+                
+                csv += row + '\n';
+            });
+
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `NTG_All_Lists_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
         }
 
 
