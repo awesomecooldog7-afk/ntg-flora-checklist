@@ -54,6 +54,13 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            padding: 0;
+            line-height: 1;
+            z-index: 100;
+        }
+
+        .menu-btn:active {
+            transform: translateY(-50%) scale(0.95);
         }
 
         .menu-btn:hover {
@@ -1180,6 +1187,35 @@
             </div>
             <div id="saved-lists-container"></div>
         </div>
+
+        <!-- Life List Page -->
+        <div class="page" id="life-list-page">
+            <div class="controls">
+                <h2 style="margin: 0 0 20px 0;">Life List</h2>
+                <p style="color:#666; font-size:14px; margin-bottom:20px;">
+                    All species observed across your saved surveys
+                </p>
+            </div>
+            <div class="stats" style="margin-bottom:20px;">
+                <div class="stat">
+                    <div class="stat-number" id="life-list-total">0</div>
+                    <div class="stat-label">Total Species</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="life-list-native" style="color:#2d5016;">0</div>
+                    <div class="stat-label">Native</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="life-list-exotic" style="color:#c92a2a;">0</div>
+                    <div class="stat-label">Exotic</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="life-list-indicators" style="color:#e65100;">0</div>
+                    <div class="stat-label">Indicators</div>
+                </div>
+            </div>
+            <div id="life-list-container"></div>
+        </div>
     </div>
 
     <!-- Menu Modal -->
@@ -1198,6 +1234,10 @@
                 <div class="menu-item" onclick="navigateTo('saved-lists')">
                     <span class="menu-item-icon">📋</span>
                     <span>Saved Lists</span>
+                </div>
+                <div class="menu-item" onclick="navigateTo('life-list')">
+                    <span class="menu-item-icon">🦋</span>
+                    <span>Life List</span>
                 </div>
             </div>
         </div>
@@ -2266,6 +2306,7 @@
             document.getElementById('home-page').classList.remove('active');
             document.getElementById('gallery-page').classList.remove('active');
             document.getElementById('saved-lists-page').classList.remove('active');
+            document.getElementById('life-list-page').classList.remove('active');
             
             document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
             
@@ -2283,6 +2324,11 @@
                 document.querySelectorAll('.menu-item')[2].classList.add('active');
                 document.getElementById('page-subtitle').textContent = 'Saved Survey Lists';
                 await renderSavedLists();
+            } else if (page === 'life-list') {
+                document.getElementById('life-list-page').classList.add('active');
+                document.querySelectorAll('.menu-item')[3].classList.add('active');
+                document.getElementById('page-subtitle').textContent = 'Life List';
+                await renderLifeList();
             }
             
             toggleMenu();
@@ -2606,6 +2652,100 @@
             a.download = `ntg_checklist_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // Life List functions
+        async function renderLifeList() {
+            const container = document.getElementById('life-list-container');
+            
+            // Collect all unique species from all saved lists
+            const uniqueSpeciesMap = new Map();
+            
+            savedLists.forEach(list => {
+                list.species.forEach(sp => {
+                    if (!uniqueSpeciesMap.has(sp.scientific)) {
+                        uniqueSpeciesMap.set(sp.scientific, {
+                            scientific: sp.scientific,
+                            common: sp.common,
+                            status: sp.status,
+                            indicator: sp.indicator,
+                            category: sp.category,
+                            firstSeen: list.date,
+                            surveyCount: 1,
+                            surveys: [list.title]
+                        });
+                    } else {
+                        const existing = uniqueSpeciesMap.get(sp.scientific);
+                        existing.surveyCount++;
+                        if (!existing.surveys.includes(list.title)) {
+                            existing.surveys.push(list.title);
+                        }
+                        // Keep earliest date
+                        if (new Date(list.date) < new Date(existing.firstSeen)) {
+                            existing.firstSeen = list.date;
+                        }
+                    }
+                });
+            });
+            
+            const lifeList = Array.from(uniqueSpeciesMap.values()).sort((a, b) => 
+                a.scientific.localeCompare(b.scientific)
+            );
+            
+            // Update stats
+            const nativeCount = lifeList.filter(s => s.status === 'native').length;
+            const exoticCount = lifeList.filter(s => s.status === 'exotic').length;
+            const indicatorCount = lifeList.filter(s => s.indicator).length;
+            
+            document.getElementById('life-list-total').textContent = lifeList.length;
+            document.getElementById('life-list-native').textContent = nativeCount;
+            document.getElementById('life-list-exotic').textContent = exoticCount;
+            document.getElementById('life-list-indicators').textContent = indicatorCount;
+            
+            if (lifeList.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-lists">
+                        <div class="empty-lists-icon">🦋</div>
+                        <p>No species in your life list yet</p>
+                        <p style="font-size:14px;">Species will appear here as you save survey lists.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group by category
+            const byCategory = {
+                grasses: lifeList.filter(s => s.category === 'grasses'),
+                forbs: lifeList.filter(s => s.category === 'forbs'),
+                sedges: lifeList.filter(s => s.category === 'sedges')
+            };
+            
+            let html = '';
+            
+            for (const [category, species] of Object.entries(byCategory)) {
+                if (species.length === 0) continue;
+                
+                const icon = category === 'grasses' ? '🌾' : category === 'forbs' ? '🌸' : '🌿';
+                html += `<div class="category-header">${icon} ${category.charAt(0).toUpperCase() + category.slice(1)} (${species.length})</div>`;
+                
+                species.forEach(sp => {
+                    html += `
+                        <div class="species-item ${sp.status}">
+                            <div class="species-info">
+                                <div class="species-scientific">${sp.scientific} ${sp.indicator ? '⭐' : ''}</div>
+                                <div class="species-common">${sp.common}</div>
+                                <div class="species-status-badge ${sp.status}">${sp.status}</div>
+                                <div style="font-size:11px; color:#666; margin-top:4px;">
+                                    First seen: ${new Date(sp.firstSeen).toLocaleDateString('en-AU')} • 
+                                    Found in ${sp.surveyCount} survey${sp.surveyCount > 1 ? 's' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            container.innerHTML = html;
         }
 
         function openImportModal() {
