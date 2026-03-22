@@ -1625,9 +1625,16 @@ const speciesData = {
         async function initApp() {
             console.log('Initializing NTG Flora Checklist...');
             
-            // Hide loading screen
-            document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
+            // Hide loading screen if it exists
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+            }
+            
+            const appElement = document.getElementById('app');
+            if (appElement) {
+                appElement.style.display = 'block';
+            }
             
             // Load custom species from IndexedDB
             const stored = await dbManager.get(STORES.customSpecies, 'species');
@@ -2557,22 +2564,12 @@ const speciesData = {
         }
 
 
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(reg => console.log('✓ Service Worker registered'))
-                    .catch(err => console.log('Service Worker registration failed:', err));
-            });
-        }
-
-    
         // Register Service Worker AFTER app is initialized
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js')
                     .then(reg => console.log('✓ Service Worker registered'))
-                    .catch(err => console.warn('Service Worker failed:', err));
+                    .catch(err => console.warn('Service Worker registration failed:', err));
             });
         }
     
