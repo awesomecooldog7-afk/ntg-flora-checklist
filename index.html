@@ -1475,7 +1475,7 @@
         const dbManager = new IndexedDBManager();
 
         // Species Data
-const speciesData = {
+        const speciesData = {
             grasses: [
                 { scientific: "Themeda triandra", common: "Kangaroo Grass", status: "native", indicator: false, page: "" },
                 { scientific: "Bothriochloa macra", common: "Red Grass", status: "native", indicator: false, page: "" },
@@ -1726,8 +1726,13 @@ const speciesData = {
 
         // Update stats
         async function updateStats() {
+            // Count TOTAL species in database (all species, not just checked)
+            const totalSpeciesCount = Object.values(speciesData).reduce((sum, arr) => sum + arr.length, 0) +
+                                     Object.values(customSpecies).reduce((sum, arr) => sum + arr.length, 0);
+            
+            // Count CHECKED species
             const keys = await dbManager.getAllKeys(STORES.selections);
-            const total = keys.length;
+            const checkedCount = keys.length;
             
             let nativeCount = 0;
             let exoticCount = 0;
@@ -1740,9 +1745,15 @@ const speciesData = {
                 }
             }
             
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-native').textContent = nativeCount;
-            document.getElementById('stat-exotic').textContent = exoticCount;
+            // Update stats display
+            const statTotal = document.getElementById('stat-total');
+            const statRecorded = document.getElementById('stat-recorded');
+            const statNative = document.getElementById('stat-native');
+            const statExotic = document.getElementById('stat-exotic');
+            
+            if (statTotal) statTotal.textContent = totalSpeciesCount;
+            if (statNative) statNative.textContent = nativeCount;
+            if (statExotic) statExotic.textContent = exoticCount;
             
             // Count recorded (species with photos or page numbers)
             let recordedCount = 0;
@@ -1751,7 +1762,7 @@ const speciesData = {
             const allKeys = [...new Set([...photoKeys, ...pageKeys])];
             recordedCount = allKeys.length;
             
-            document.getElementById('stat-recorded').textContent = recordedCount;
+            if (statRecorded) statRecorded.textContent = recordedCount;
         }
 
 
@@ -2122,7 +2133,11 @@ const speciesData = {
         // Navigation
         function toggleMenu() {
             const menu = document.getElementById('hamburger-menu');
-            menu.classList.toggle('active');
+            if (menu) {
+                menu.classList.toggle('active');
+            } else {
+                console.warn('Menu element not found');
+            }
         }
 
         async function navigateTo(page) {
