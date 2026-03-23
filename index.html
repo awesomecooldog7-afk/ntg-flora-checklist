@@ -1113,7 +1113,7 @@
                 <div style="font-size:13px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
                     🔍 Growth Form
                 </div>
-                <div class="filter-tabs">
+                <div class="filter-tabs" style="margin-bottom:20px;">
                     <button class="filter-tab active" data-filter="all">All</button>
                     <button class="filter-tab" data-filter="trees">🌳 Trees</button>
                     <button class="filter-tab" data-filter="shrubs">🌿 Shrubs</button>
@@ -1695,30 +1695,392 @@
         // Species Data
         // Family lookup for species
         const familyLookup = {
+            // Grasses - Poaceae
             'Themeda triandra': 'Poaceae',
             'Bothriochloa macra': 'Poaceae',
             'Rytidosperma spp.': 'Poaceae',
             'Austrostipa spp.': 'Poaceae',
             'Austrostipa bigeniculata': 'Poaceae',
-            'Microlaena stipoides': 'Poaceae',
+            'Austrostipa scabra var. falcata': 'Poaceae',
+            'Lachnagrostis filiformis': 'Poaceae',
             'Poa sieberiana var. sieberiana': 'Poaceae',
             'Poa labillardierei var. labillardierei': 'Poaceae',
+            'Microlaena stipoides': 'Poaceae',
+            'Dichelachne spp.': 'Poaceae',
+            'Chloris truncata': 'Poaceae',
+            'Aristida ramosa': 'Poaceae',
+            'Elymus scaber': 'Poaceae',
+            'Eragrostis curvula': 'Poaceae',
+            'Phalaris aquatica': 'Poaceae',
+            'Dactylis glomerata': 'Poaceae',
+            'Holcus lanatus': 'Poaceae',
+            'Vulpia spp.': 'Poaceae',
+            'Bromus spp.': 'Poaceae',
+            'Lolium rigidum': 'Poaceae',
+            
+            // Forbs - Campanulaceae
             'Wahlenbergia planiflora': 'Campanulaceae',
+            'Wahlenbergia communis': 'Campanulaceae',
+            'Wahlenbergia gracilis': 'Campanulaceae',
+            'Wahlenbergia stricta': 'Campanulaceae',
+            'Pratia purpurascens': 'Campanulaceae',
+            'Lobelia pedunculata': 'Campanulaceae',
+            
+            // Forbs - Fabaceae
             'Desmodium varians': 'Fabaceae',
             'Desmodium brachypodum': 'Fabaceae',
+            'Glycine clandestina': 'Fabaceae',
+            'Glycine tabacina': 'Fabaceae',
+            'Kennedia prostrata': 'Fabaceae',
+            'Swainsona galegifolia': 'Fabaceae',
+            'Swainsona monticola': 'Fabaceae',
+            'Trifolium repens': 'Fabaceae',
+            'Trifolium subterraneum': 'Fabaceae',
+            'Trifolium arvense': 'Fabaceae',
+            'Trifolium dubium': 'Fabaceae',
+            'Trifolium campestre': 'Fabaceae',
+            'Medicago sativa': 'Fabaceae',
+            'Medicago lupulina': 'Fabaceae',
+            'Zornia dyctiocarpa': 'Fabaceae',
+            
+            // Forbs - Caryophyllaceae
             'Scleranthus biflorus': 'Caryophyllaceae',
+            'Stellaria flaccida': 'Caryophyllaceae',
+            'Stellaria pungens': 'Caryophyllaceae',
+            'Cerastium glomeratum': 'Caryophyllaceae',
+            'Spergularia rubra': 'Caryophyllaceae',
+            
+            // Forbs - Asteraceae
             'Vittadinia muelleri': 'Asteraceae',
             'Vittadinia cuneata var. cuneata': 'Asteraceae',
             'Brachyscome aculeata': 'Asteraceae',
             'Brachyscome rigidula': 'Asteraceae',
-            'Bulbine bulbosa': 'Asphodelaceae',
+            'Coronidium monticola': 'Asteraceae',
             'Chrysocephalus apiculatus': 'Asteraceae',
+            'Leptorhynchos squamatus': 'Asteraceae',
+            'Craspedia variabilis': 'Asteraceae',
+            'Podolepis jaceoides': 'Asteraceae',
+            'Leucochrysum albicans': 'Asteraceae',
+            'Chrysocephalus semipapposus': 'Asteraceae',
+            'Helichrysum leucopsideum': 'Asteraceae',
+            'Helichrysum scorpioides': 'Asteraceae',
+            'Xerochrysum bracteatum': 'Asteraceae',
+            'Rhodanthe anthemoides': 'Asteraceae',
+            'Calotis lappulacea': 'Asteraceae',
+            'Cymbonotus lawsonianus': 'Asteraceae',
+            'Senecio linearifolius': 'Asteraceae',
+            'Senecio quadridentatus': 'Asteraceae',
+            'Senecio brigalowensis': 'Asteraceae',
+            'Senecio minimus': 'Asteraceae',
+            'Solenogyne gunnii': 'Asteraceae',
+            'Hypochaeris radicata': 'Asteraceae',
+            'Hypochaeris glabra': 'Asteraceae',
+            'Cirsium vulgare': 'Asteraceae',
+            'Cassinia longifolia': 'Asteraceae',
+            'Cassinia quinquefaria': 'Asteraceae',
+            'Calocephalus citreus': 'Asteraceae',
+            'Millotia myosotidifolia': 'Asteraceae',
+            'Pseudognaphalium luteoalbum': 'Asteraceae',
+            'Youngia japonica': 'Asteraceae',
+            'Crepis capillaris': 'Asteraceae',
+            'Taraxacum officinale': 'Asteraceae',
+            'Lactuca serriola': 'Asteraceae',
+            'Sonchus oleraceus': 'Asteraceae',
+            'Helminthotheca echioides': 'Asteraceae',
+            'Picris angustifolia': 'Asteraceae',
+            'Microseris lanceolata': 'Asteraceae',
+            'Microseris scapigera': 'Asteraceae',
+            'Lapsana communis': 'Asteraceae',
+            'Xanthium spinosum': 'Asteraceae',
+            
+            // Forbs - Asphodelaceae
+            'Bulbine bulbosa': 'Asphodelaceae',
+            'Dianella longifolia': 'Asphodelaceae',
+            'Dianella revoluta': 'Asphodelaceae',
+            'Dianella tasmanica': 'Asphodelaceae',
+            'Caesia calliantha': 'Asphodelaceae',
+            
+            // Forbs - Asparagaceae
             'Lomandra longifolia': 'Asparagaceae',
             'Lomandra multiflora': 'Asparagaceae',
             'Lomandra filiformis': 'Asparagaceae',
+            'Arthropodium milleflorum': 'Asparagaceae',
+            'Arthropodium minus': 'Asparagaceae',
+            'Chamaescilla corymbosa': 'Asparagaceae',
+            'Thysanotus tuberosus': 'Asparagaceae',
+            
+            // Forbs - Colchicaceae
+            'Wurmbea dioica': 'Colchicaceae',
+            'Burchardia umbellata': 'Colchicaceae',
+            
+            // Forbs - Geraniaceae
+            'Geranium solanderi': 'Geraniaceae',
+            'Geranium retrorsum': 'Geraniaceae',
+            'Pelargonium australe': 'Geraniaceae',
+            
+            // Forbs - Rubiaceae
+            'Asperula conferta': 'Rubiaceae',
+            'Opercularia hispida': 'Rubiaceae',
+            'Opercularia varia': 'Rubiaceae',
+            'Galium gaudichaudii': 'Rubiaceae',
+            'Galium migrans': 'Rubiaceae',
+            
+            // Forbs - Celastraceae
+            'Stackhousia monogyna': 'Celastraceae',
+            
+            // Forbs - Plantaginaceae
+            'Plantago varia': 'Plantaginaceae',
+            'Plantago debilis': 'Plantaginaceae',
+            'Plantago lanceolata': 'Plantaginaceae',
+            'Veronica calycina': 'Plantaginaceae',
+            'Veronica gracilis': 'Plantaginaceae',
+            'Veronica plebeia': 'Plantaginaceae',
+            
+            // Forbs - Chenopodiaceae
+            'Einadia hastata': 'Chenopodiaceae',
+            'Einadia nutans': 'Chenopodiaceae',
+            'Chenopodium pumilio': 'Chenopodiaceae',
+            
+            // Forbs - Oxalidaceae
+            'Oxalis perennans': 'Oxalidaceae',
+            'Oxalis corniculata': 'Oxalidaceae',
+            
+            // Forbs - Araliaceae
+            'Hydrocotyle laxiflora': 'Araliaceae',
+            'Trachymene incisa': 'Araliaceae',
+            'Xanthosia dissecta': 'Araliaceae',
+            'Polyscias sambucifolia': 'Araliaceae',
+            
+            // Forbs - Gentianaceae
+            'Centaurium erythraea': 'Gentianaceae',
+            'Centaurium tenuiflorum': 'Gentianaceae',
+            
+            // Forbs - Scrophulariaceae
+            'Verbascum thapsus': 'Scrophulariaceae',
+            
+            // Forbs - Goodeniaceae
+            'Goodenia hederacea': 'Goodeniaceae',
+            'Goodenia pinnatifida': 'Goodeniaceae',
+            'Scaevola aemula': 'Goodeniaceae',
+            
+            // Forbs - Convolvulaceae
+            'Convolvulus erubescens': 'Convolvulaceae',
+            'Dichondra repens': 'Convolvulaceae',
+            
+            // Forbs - Phyllanthaceae
+            'Poranthera microphylla': 'Phyllanthaceae',
+            'Phyllanthus hirtellus': 'Phyllanthaceae',
+            
+            // Forbs - Haloragaceae
+            'Gonocarpus tetragynus': 'Haloragaceae',
+            'Myriophyllum sp.': 'Haloragaceae',
+            
+            // Forbs - Polygonaceae
+            'Rumex brownii': 'Polygonaceae',
+            'Rumex dumosus': 'Polygonaceae',
+            'Rumex crispus': 'Polygonaceae',
+            'Persicaria decipiens': 'Polygonaceae',
+            'Persicaria lapathifolia': 'Polygonaceae',
+            'Persicaria prostrata': 'Polygonaceae',
+            'Acetosella vulgaris': 'Polygonaceae',
+            'Muehlenbeckia adpressa': 'Polygonaceae',
+            'Muehlenbeckia gunnii': 'Polygonaceae',
+            
+            // Forbs - Droseraceae
+            'Drosera auriculata': 'Droseraceae',
+            'Drosera peltata': 'Droseraceae',
+            
+            // Forbs - Crassulaceae
+            'Crassula sieberiana': 'Crassulaceae',
+            
+            // Forbs - Onagraceae
+            'Epilobium billardierianum': 'Onagraceae',
+            'Oenothera stricta': 'Onagraceae',
+            
+            // Forbs - Hypericaceae
+            'Hypericum perforatum': 'Hypericaceae',
+            'Hypericum gramineum': 'Hypericaceae',
+            
+            // Forbs - Montiaceae
+            'Montia australasica': 'Montiaceae',
+            
+            // Forbs - Ranunculaceae
+            'Ranunculus lappaceus': 'Ranunculaceae',
+            'Ranunculus plebeius': 'Ranunculaceae',
+            'Clematis microphylla': 'Ranunculaceae',
+            
+            // Forbs - Brassicaceae
+            'Lepidium sp.': 'Brassicaceae',
+            
+            // Forbs - Linaceae
+            'Linum marginale': 'Linaceae',
+            
+            // Forbs - Malvaceae
+            'Lavatera plebeia': 'Malvaceae',
+            
+            // Forbs - Orchidaceae
+            'Thelymitra ixioides': 'Orchidaceae',
+            'Thelymitra pauciflora': 'Orchidaceae',
+            'Diuris maculata': 'Orchidaceae',
+            'Diuris sulphurea': 'Orchidaceae',
+            'Pterostylis nutans': 'Orchidaceae',
+            'Microtis unifolia': 'Orchidaceae',
+            'Caladenia carnea': 'Orchidaceae',
+            'Eriochilus cucullatus': 'Orchidaceae',
+            'Cryptostylis subulata': 'Orchidaceae',
+            
+            // Forbs - Iridaceae
+            'Libertia paniculata': 'Iridaceae',
+            'Romulea rosea': 'Iridaceae',
+            
+            // Forbs - Ophioglossaceae
+            'Ophioglossum lusitanicum': 'Ophioglossaceae',
+            
+            // Forbs - Urticaceae
+            'Urtica incisa': 'Urticaceae',
+            'Urtica urens': 'Urticaceae',
+            'Parietaria debilis': 'Urticaceae',
+            
+            // Forbs - Amaranthaceae
+            'Alternanthera denticulata': 'Amaranthaceae',
+            'Ptilotus macrocephalus': 'Amaranthaceae',
+            'Amaranthus retroflexus': 'Amaranthaceae',
+            
+            // Forbs - Verbenaceae
+            'Verbena officinalis': 'Verbenaceae',
+            
+            // Forbs - Lamiaceae
+            'Marrubium vulgare': 'Lamiaceae',
+            'Salvia verbenaca': 'Lamiaceae',
+            'Ajuga australis': 'Lamiaceae',
+            
+            // Forbs - Solanaceae
+            'Solanum nigrum': 'Solanaceae',
+            'Datura stramonium': 'Solanaceae',
+            
+            // Forbs - Apiaceae
+            'Foeniculum vulgare': 'Apiaceae',
+            
+            // Forbs - Pteridaceae (Ferns)
+            'Cheilanthes austrotenuifolia': 'Pteridaceae',
+            'Pellaea falcata': 'Pteridaceae',
+            
+            // Forbs - Blechnaceae (Ferns)
+            'Blechnum nudum': 'Blechnaceae',
+            'Blechnum pennamarina': 'Blechnaceae',
+            
+            // Forbs - Dennstaedtiaceae (Ferns)
+            'Pteridium esculentum': 'Dennstaedtiaceae',
+            
+            // Forbs - Aspleniaceae (Ferns)
+            'Asplenium flabellifolium': 'Aspleniaceae',
+            
+            // Forbs - Dilleniaceae
+            'Hibbertia obtusifolia': 'Dilleniaceae',
+            'Hibbertia riparia': 'Dilleniaceae',
+            
+            // Sedges - Cyperaceae
             'Carex inversa': 'Cyperaceae',
+            'Carex appressa': 'Cyperaceae',
+            'Isolepis fluitans': 'Cyperaceae',
+            'Schoenus apogon': 'Cyperaceae',
+            'Lepidosperma laterale': 'Cyperaceae',
+            
+            // Sedges - Juncaceae
             'Juncus australis': 'Juncaceae',
-            'Schoenus apogon': 'Cyperaceae'
+            'Juncus subsecundus': 'Juncaceae',
+            'Juncus usitatus': 'Juncaceae',
+            'Luzula densiflora': 'Juncaceae',
+            'Luzula meridionalis': 'Juncaceae',
+            
+            // Sedges - Juncaginaceae
+            'Triglochin procera': 'Juncaginaceae',
+            
+            // Sedges - Xyridaceae
+            'Xyris operculata': 'Xyridaceae',
+            
+            // Trees - Myrtaceae
+            'Eucalyptus melliodora': 'Myrtaceae',
+            'Eucalyptus blakelyi': 'Myrtaceae',
+            'Eucalyptus bridgesiana': 'Myrtaceae',
+            'Eucalyptus mannifera': 'Myrtaceae',
+            'Eucalyptus polyanthemos': 'Myrtaceae',
+            'Eucalyptus macrorhyncha': 'Myrtaceae',
+            'Eucalyptus rossii': 'Myrtaceae',
+            'Eucalyptus dives': 'Myrtaceae',
+            'Kunzea ericoides': 'Myrtaceae',
+            
+            // Trees - Casuarinaceae
+            'Allocasuarina verticillata': 'Casuarinaceae',
+            
+            // Trees - Rutaceae
+            'Geijera parviflora': 'Rutaceae',
+            
+            // Shrubs - Fabaceae
+            'Acacia dealbata': 'Fabaceae',
+            'Acacia melanoxylon': 'Fabaceae',
+            'Acacia parramattensis': 'Fabaceae',
+            'Bossiaea buxifolia': 'Fabaceae',
+            'Bossiaea prostrata': 'Fabaceae',
+            'Dillwynia sericea': 'Fabaceae',
+            'Dillwynia glaberrima': 'Fabaceae',
+            'Hovea linearis': 'Fabaceae',
+            'Hovea heterophylla': 'Fabaceae',
+            'Indigofera australis': 'Fabaceae',
+            'Daviesia leptophylla': 'Fabaceae',
+            'Pultenaea foliolosa': 'Fabaceae',
+            'Pultenaea procumbens': 'Fabaceae',
+            'Gompholobium huegelii': 'Fabaceae',
+            'Callistachys lanceolata': 'Fabaceae',
+            'Ulex europaeus': 'Fabaceae',
+            
+            // Shrubs - Proteaceae
+            'Hakea decurrens': 'Proteaceae',
+            'Hakea microcarpa': 'Proteaceae',
+            'Grevillea juniperina': 'Proteaceae',
+            'Grevillea lanigera': 'Proteaceae',
+            
+            // Shrubs - Sapindaceae
+            'Dodonaea viscosa': 'Sapindaceae',
+            
+            // Shrubs - Santalaceae
+            'Exocarpos cupressiformis': 'Santalaceae',
+            
+            // Shrubs - Thymelaeaceae
+            'Pimelea linifolia': 'Thymelaeaceae',
+            'Pimelea curviflora': 'Thymelaeaceae',
+            
+            // Shrubs - Ericaceae
+            'Astroloma humifusum': 'Ericaceae',
+            'Lissanthe strigosa': 'Ericaceae',
+            'Leucopogon fletcheri': 'Ericaceae',
+            'Acrotriche serrulata': 'Ericaceae',
+            
+            // Shrubs - Lamiaceae
+            'Prostanthera lasianthos': 'Lamiaceae',
+            
+            // Shrubs - Solanaceae
+            'Solanum laciniatum': 'Solanaceae',
+            'Nicotiana glauca': 'Solanaceae',
+            'Lycium ferocissimum': 'Solanaceae',
+            
+            // Shrubs - Rutaceae
+            'Phebalium squameum': 'Rutaceae',
+            'Zieria cytisoides': 'Rutaceae',
+            
+            // Shrubs - Rosaceae
+            'Rubus fruticosus': 'Rosaceae',
+            'Rubus parvifolius': 'Rosaceae',
+            'Rosa rubiginosa': 'Rosaceae',
+            
+            // Shrubs - Pittosporaceae
+            'Bursaria spinosa': 'Pittosporaceae',
+            
+            // Vines - Pittosporaceae
+            'Billardiera scandens': 'Pittosporaceae',
+            
+            // Vines - Fabaceae
+            'Hardenbergia violacea': 'Fabaceae'
         };
         
         const speciesData = {
