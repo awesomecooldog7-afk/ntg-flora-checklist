@@ -1344,7 +1344,8 @@
                     <label class="form-label">GPS Coordinates (optional)</label>
                     <div style="display:flex; gap:8px;">
                         <input type="text" class="form-input" id="list-gps" placeholder="e.g., -35.5123, 148.9876" style="flex:1;">
-                        <button type="button" onclick="getGPSLocation()" style="padding:8px 12px; border:none; background:#4a7c2c; color:white; border-radius:6px; cursor:pointer; white-space:nowrap;">📍 Get GPS</button>
+                        <button type="button" onclick="openMapPicker('save')" style="padding:8px 12px; border:none; background:#2196F3; color:white; border-radius:6px; cursor:pointer; white-space:nowrap;">🗺️ Map</button>
+                        <button type="button" onclick="getCurrentLocation('save')" style="padding:8px 12px; border:none; background:#4a7c2c; color:white; border-radius:6px; cursor:pointer; white-space:nowrap;">📍 Current</button>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1363,6 +1364,91 @@
                     <button type="submit" class="btn btn-primary">Save List</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Edit List Modal -->
+    <div class="modal" id="edit-list-modal" onclick="if(event.target === this) closeEditListModal()">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">✏️ Edit Survey List</div>
+            <form id="edit-list-form" onsubmit="saveEditedList(event)">
+                <input type="hidden" id="edit-list-id">
+                <div class="form-group">
+                    <label class="form-label">Survey Title *</label>
+                    <input type="text" class="form-input" id="edit-list-title" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location *</label>
+                    <input type="text" class="form-input" id="edit-list-location" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GPS Coordinates</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" class="form-input" id="edit-list-gps" placeholder="e.g., -35.5123, 148.9876" style="flex:1;">
+                        <button type="button" onclick="openMapPicker('edit')" style="padding:8px 12px; border:none; background:#2196F3; color:white; border-radius:6px; cursor:pointer; white-space:nowrap;">🗺️ Pick on Map</button>
+                        <button type="button" onclick="getCurrentLocation('edit')" style="padding:8px 12px; border:none; background:#4a7c2c; color:white; border-radius:6px; cursor:pointer; white-space:nowrap;">📍 Use Current</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-input" id="edit-list-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-input" id="edit-list-notes" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Species in this list</label>
+                    <div style="max-height:200px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:8px; padding:10px; background:#f8f9fa;">
+                        <div id="edit-list-species-list"></div>
+                    </div>
+                    <button type="button" onclick="openAddSpeciesToList()" style="margin-top:8px; padding:8px 16px; border:none; background:#4a7c2c; color:white; border-radius:6px; cursor:pointer; width:100%;">+ Add Species</button>
+                </div>
+                
+                <p style="color:#666; font-size:13px; margin:12px 0;">
+                    <strong id="edit-list-species-count">0</strong> species in this list.
+                </p>
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditListModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Species to List Modal -->
+    <div class="modal" id="add-species-to-list-modal">
+        <div class="modal-content">
+            <div class="modal-header">+ Add Species to List</div>
+            <div class="form-group">
+                <input type="text" class="form-input" id="species-search" placeholder="Search species..." onkeyup="searchSpeciesForList()">
+            </div>
+            <div style="max-height:400px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:8px; padding:10px; background:#f8f9fa;">
+                <div id="species-search-results"></div>
+            </div>
+            <div class="form-buttons" style="margin-top:16px;">
+                <button type="button" class="btn btn-secondary" onclick="closeAddSpeciesToList()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Picker Modal -->
+    <div class="modal" id="map-picker-modal">
+        <div class="modal-content" style="max-width: 90vw; max-height: 90vh;">
+            <div class="modal-header">🗺️ Select Location on Map</div>
+            <p style="color:#666; font-size:14px; margin-bottom:12px;">Click on the map to place a pin at your survey location</p>
+            <div id="map-container" style="width:100%; height:500px; border-radius:8px; overflow:hidden; background:#e0e0e0;">
+                <iframe id="map-iframe" style="width:100%; height:100%; border:none;" 
+                    src="about:blank"></iframe>
+            </div>
+            <div style="margin-top:12px; padding:10px; background:#f0f7ed; border-radius:6px; font-size:13px;">
+                <strong>Selected:</strong> <span id="map-selected-coords">Click map to select location</span>
+            </div>
+            <div class="form-buttons" style="margin-top:16px;">
+                <button type="button" class="btn btn-secondary" onclick="closeMapPicker()">Cancel</button>
+                <button type="button" class="btn btn-primary" id="map-confirm-btn" onclick="confirmMapSelection()" disabled>Use This Location</button>
+            </div>
         </div>
     </div>
 
@@ -2670,6 +2756,7 @@
                     </div>
                     <div class="saved-list-actions">
                         <button class="saved-list-btn view" onclick="viewListDetails(${list.id})">View Full List</button>
+                        <button class="saved-list-btn" onclick="openEditListModal(${list.id})" style="background:#ff9800;">Edit</button>
                         <button class="saved-list-btn" onclick="exportListAsTable(${list.id})" style="background:#2196F3;">Export CSV</button>
                         <button class="saved-list-btn delete" onclick="deleteList(${list.id})">Delete</button>
                     </div>
@@ -2695,6 +2782,310 @@
                 await dbManager.set(STORES.savedLists, 'lists', savedLists);
                 await renderSavedLists();
             }
+        }
+
+        // Edit List Functions
+        let currentEditingList = null;
+        
+        function openEditListModal(listId) {
+            const list = savedLists.find(l => l.id === listId);
+            if (!list) return;
+            
+            currentEditingList = list;
+            
+            document.getElementById('edit-list-id').value = list.id;
+            document.getElementById('edit-list-title').value = list.title;
+            document.getElementById('edit-list-location').value = list.location;
+            document.getElementById('edit-list-gps').value = list.gps || '';
+            document.getElementById('edit-list-date').value = list.date;
+            document.getElementById('edit-list-notes').value = list.notes || '';
+            
+            renderEditListSpecies();
+            
+            document.getElementById('edit-list-modal').classList.add('active');
+        }
+        
+        function renderEditListSpecies() {
+            if (!currentEditingList) return;
+            
+            const container = document.getElementById('edit-list-species-list');
+            const count = document.getElementById('edit-list-species-count');
+            
+            count.textContent = currentEditingList.species.length;
+            
+            if (currentEditingList.species.length === 0) {
+                container.innerHTML = '<div style="color:#999; font-style:italic; padding:10px; text-align:center;">No species yet</div>';
+                return;
+            }
+            
+            container.innerHTML = currentEditingList.species.map((sp, index) => `
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; border-bottom:1px solid #e0e0e0;">
+                    <div>
+                        <div style="font-style:italic; font-weight:500;">${sp.scientific} ${sp.indicator ? '⭐' : ''}</div>
+                        <div style="font-size:12px; color:#666;">${sp.common}</div>
+                    </div>
+                    <button onclick="removeSpeciesFromEditList(${index})" style="background:#dc3545; color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px;">Remove</button>
+                </div>
+            `).join('');
+        }
+        
+        function removeSpeciesFromEditList(index) {
+            if (!currentEditingList) return;
+            currentEditingList.species.splice(index, 1);
+            renderEditListSpecies();
+        }
+        
+        function openAddSpeciesToList() {
+            document.getElementById('add-species-to-list-modal').classList.add('active');
+            document.getElementById('species-search').value = '';
+            searchSpeciesForList();
+        }
+        
+        function closeAddSpeciesToList() {
+            document.getElementById('add-species-to-list-modal').classList.remove('active');
+        }
+        
+        function searchSpeciesForList() {
+            const searchTerm = document.getElementById('species-search').value.toLowerCase();
+            const results = document.getElementById('species-search-results');
+            
+            // Get all species
+            let allSpecies = [];
+            for (const category of ['trees', 'shrubs', 'grasses', 'forbs', 'sedges', 'vines']) {
+                [...speciesData[category], ...customSpecies[category]].forEach(sp => {
+                    allSpecies.push({
+                        ...sp,
+                        category: category
+                    });
+                });
+            }
+            
+            // Filter by search term
+            if (searchTerm) {
+                allSpecies = allSpecies.filter(sp => 
+                    sp.scientific.toLowerCase().includes(searchTerm) || 
+                    sp.common.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Limit to 50 results
+            allSpecies = allSpecies.slice(0, 50);
+            
+            if (allSpecies.length === 0) {
+                results.innerHTML = '<div style="color:#999; font-style:italic; padding:10px; text-align:center;">No species found</div>';
+                return;
+            }
+            
+            results.innerHTML = allSpecies.map((sp, idx) => {
+                const alreadyInList = currentEditingList && currentEditingList.species.some(s => s.scientific === sp.scientific);
+                return `
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; border-bottom:1px solid #e0e0e0;">
+                        <div>
+                            <div style="font-style:italic; font-weight:500;">${sp.scientific} ${sp.indicator ? '⭐' : ''}</div>
+                            <div style="font-size:12px; color:#666;">${sp.common}</div>
+                        </div>
+                        <button onclick="addSpeciesToEditListByIndex(${idx})" 
+                            ${alreadyInList ? 'disabled' : ''}
+                            style="background:${alreadyInList ? '#ccc' : '#4a7c2c'}; color:white; border:none; border-radius:4px; padding:4px 12px; cursor:${alreadyInList ? 'default' : 'pointer'}; font-size:12px;">
+                            ${alreadyInList ? 'Added' : 'Add'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            // Store species list for adding
+            window.tempSearchResults = allSpecies;
+        }
+        
+        function addSpeciesToEditListByIndex(index) {
+            if (!window.tempSearchResults || !window.tempSearchResults[index]) return;
+            const species = window.tempSearchResults[index];
+            if (!currentEditingList) return;
+            
+            // Check if already in list
+            if (currentEditingList.species.some(s => s.scientific === species.scientific)) {
+                return;
+            }
+            
+            currentEditingList.species.push({
+                scientific: species.scientific,
+                common: species.common,
+                status: species.status,
+                indicator: species.indicator,
+                category: species.category
+            });
+            
+            renderEditListSpecies();
+            searchSpeciesForList(); // Refresh search results
+        }
+        
+        function closeEditListModal() {
+            document.getElementById('edit-list-modal').classList.remove('active');
+            document.getElementById('edit-list-form').reset();
+            currentEditingList = null;
+        }
+        
+        async function saveEditedList(event) {
+            event.preventDefault();
+            
+            if (!currentEditingList) return;
+            
+            // Update list properties
+            currentEditingList.title = document.getElementById('edit-list-title').value.trim();
+            currentEditingList.location = document.getElementById('edit-list-location').value.trim();
+            currentEditingList.gps = document.getElementById('edit-list-gps').value.trim();
+            currentEditingList.date = document.getElementById('edit-list-date').value;
+            currentEditingList.notes = document.getElementById('edit-list-notes').value.trim();
+            // species already updated in currentEditingList by add/remove functions
+            
+            await dbManager.set(STORES.savedLists, 'lists', savedLists);
+            await renderSavedLists();
+            closeEditListModal();
+            showNotification(`✓ List "${currentEditingList.title}" updated!`);
+        }
+
+        // Map Picker Functions
+        let mapPickerMode = 'save'; // 'save' or 'edit'
+        let selectedMapCoords = null;
+        
+        function openMapPicker(mode) {
+            mapPickerMode = mode;
+            selectedMapCoords = null;
+            document.getElementById('map-confirm-btn').disabled = true;
+            document.getElementById('map-selected-coords').textContent = 'Click map to select location';
+            
+            // Get current GPS if available to center map
+            const currentGps = mode === 'save' ? 
+                document.getElementById('list-gps').value : 
+                document.getElementById('edit-list-gps').value;
+            
+            let lat = -35.3, lng = 149.1; // Default: Canberra
+            if (currentGps) {
+                const parts = currentGps.split(',');
+                if (parts.length === 2) {
+                    lat = parseFloat(parts[0].trim());
+                    lng = parseFloat(parts[1].trim());
+                }
+            }
+            
+            // Create OpenStreetMap with marker
+            const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.1},${lat-0.1},${lng+0.1},${lat+0.1}&layer=mapnik&marker=${lat},${lng}`;
+            
+            document.getElementById('map-iframe').src = mapUrl;
+            document.getElementById('map-picker-modal').classList.add('active');
+            
+            // Setup click handler
+            setupMapClickHandler(lat, lng);
+        }
+        
+        function setupMapClickHandler(initialLat, initialLng) {
+            // Create a simple HTML map that allows clicking
+            const mapHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+                    <style>
+                        body { margin: 0; padding: 0; }
+                        #map { width: 100vw; height: 100vh; }
+                    </style>
+                </head>
+                <body>
+                    <div id="map"></div>
+                    <script>
+                        const map = L.map('map').setView([${initialLat}, ${initialLng}], 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                        
+                        let marker = L.marker([${initialLat}, ${initialLng}]).addTo(map);
+                        
+                        map.on('click', function(e) {
+                            marker.setLatLng(e.latlng);
+                            window.parent.postMessage({
+                                type: 'mapClick',
+                                lat: e.latlng.lat,
+                                lng: e.latlng.lng
+                            }, '*');
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `;
+            
+            const iframe = document.getElementById('map-iframe');
+            iframe.srcdoc = mapHtml;
+        }
+        
+        // Listen for map clicks
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'mapClick') {
+                selectedMapCoords = {
+                    lat: event.data.lat.toFixed(6),
+                    lng: event.data.lng.toFixed(6)
+                };
+                document.getElementById('map-selected-coords').textContent = 
+                    `${selectedMapCoords.lat}, ${selectedMapCoords.lng}`;
+                document.getElementById('map-confirm-btn').disabled = false;
+            }
+        });
+        
+        function closeMapPicker() {
+            document.getElementById('map-picker-modal').classList.remove('active');
+            document.getElementById('map-iframe').srcdoc = '';
+        }
+        
+        function confirmMapSelection() {
+            if (!selectedMapCoords) return;
+            
+            const coords = `${selectedMapCoords.lat}, ${selectedMapCoords.lng}`;
+            if (mapPickerMode === 'save') {
+                document.getElementById('list-gps').value = coords;
+            } else {
+                document.getElementById('edit-list-gps').value = coords;
+            }
+            
+            closeMapPicker();
+        }
+        
+        function getCurrentLocation(mode) {
+            if (!navigator.geolocation) {
+                alert('GPS not supported by your browser');
+                return;
+            }
+            
+            const button = event.target;
+            button.textContent = '⏳ Getting...';
+            button.disabled = true;
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const coords = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                    if (mode === 'save') {
+                        document.getElementById('list-gps').value = coords;
+                    } else {
+                        document.getElementById('edit-list-gps').value = coords;
+                    }
+                    button.textContent = '✓ Done';
+                    setTimeout(() => {
+                        button.textContent = '📍 Current';
+                        button.disabled = false;
+                    }, 1500);
+                },
+                function(error) {
+                    alert('Could not get location: ' + error.message);
+                    button.textContent = '📍 Current';
+                    button.disabled = false;
+                }
+            );
+        }
+        
+        // Keep old function name for compatibility
+        function getGPSLocation() {
+            getCurrentLocation('save');
         }
 
         // Export individual list as CSV table
@@ -3296,7 +3687,6 @@
                     .catch(err => console.warn('Service Worker registration failed:', err));
             });
         }
-    
     </script>
 </body>
 </html>
