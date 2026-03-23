@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTG Flora Checklist</title>
+    <title>eFlora - Molonglo Valley</title>
     <link rel="manifest" href="manifest.json">
     <style>
         * {
@@ -1083,9 +1083,9 @@
     <div class="container">
         <div class="header">
             <button class="menu-btn" onclick="toggleMenu()">☰</button>
-            <h1 id="page-title">🌾 Natural Temperate Grassland</h1>
-            <p id="page-subtitle">Flora Species Checklist</p>
-            <p style="font-size:11px; opacity:0.75; margin-top:8px; font-style:italic;">Data derived in part from the<br><em>Field Guide to Plants of the Molonglo Valley</em></p>
+            <h1 id="page-title">🌿 eFlora</h1>
+            <p id="page-subtitle">Molonglo Valley Field Guide</p>
+            <p style="font-size:11px; opacity:0.75; margin-top:8px; font-style:italic;">Data derived from the<br><em>Field Guide to Plants of the Molonglo Valley</em></p>
         </div>
 
         <!-- Home Page -->
@@ -1110,14 +1110,38 @@
             </div>
 
             <div class="controls">
+                <div style="font-size:13px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
+                    🔍 Growth Form
+                </div>
                 <div class="filter-tabs">
                     <button class="filter-tab active" data-filter="all">All</button>
-                    <button class="filter-tab" data-filter="grasses">Grasses</button>
-                    <button class="filter-tab" data-filter="forbs">Forbs</button>
-                    <button class="filter-tab" data-filter="sedges">Sedges/Rushes</button>
-                    <button class="filter-tab" data-filter="native">Native Only</button>
+                    <button class="filter-tab" data-filter="trees">🌳 Trees</button>
+                    <button class="filter-tab" data-filter="shrubs">🌿 Shrubs</button>
+                    <button class="filter-tab" data-filter="grasses">🌾 Grasses</button>
+                    <button class="filter-tab" data-filter="forbs">🌸 Forbs</button>
+                    <button class="filter-tab" data-filter="sedges">🪴 Sedges/Rushes</button>
+                    <button class="filter-tab" data-filter="vines">🌱 Vines</button>
+                    <button class="filter-tab" data-filter="native">Native</button>
                     <button class="filter-tab" data-filter="exotic">Exotic</button>
                     <button class="filter-tab" data-filter="indicator">Indicators</button>
+                </div>
+                
+                <button class="toggle-habitat-btn" id="toggle-habitat-btn" onclick="toggleHabitatFilters()" style="margin-top:15px; padding:8px 16px; background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; font-size:13px; cursor:pointer; color:#666; width:100%; transition: all 0.2s;">
+                    + Show Habitat Filters (Optional)
+                </button>
+                
+                <div id="habitat-filters-section" style="display:none; padding-top:15px; margin-top:15px; border-top:2px dashed #e0e0e0;">
+                    <div style="font-size:13px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
+                        🏞️ Habitat (Refine Results)
+                    </div>
+                    <div class="filter-tabs" id="habitat-filter-tabs">
+                        <button class="filter-tab" data-habitat="grassland">Grassland</button>
+                        <button class="filter-tab" data-habitat="woodland">Woodland</button>
+                        <button class="filter-tab" data-habitat="wetland">Wetland</button>
+                        <button class="filter-tab" data-habitat="riparian">Riparian</button>
+                        <button class="filter-tab" data-habitat="rocky">Rocky</button>
+                        <button class="filter-tab" data-habitat="disturbed">Disturbed</button>
+                    </div>
                 </div>
             </div>
 
@@ -1147,10 +1171,13 @@
             <div class="controls">
                 <div class="filter-tabs" id="gallery-filters">
                     <button class="filter-tab active" data-filter="all">All</button>
-                    <button class="filter-tab" data-filter="grasses">Grasses</button>
-                    <button class="filter-tab" data-filter="forbs">Forbs</button>
-                    <button class="filter-tab" data-filter="sedges">Sedges/Rushes</button>
-                    <button class="filter-tab" data-filter="native">Native Only</button>
+                    <button class="filter-tab" data-filter="trees">🌳 Trees</button>
+                    <button class="filter-tab" data-filter="shrubs">🌿 Shrubs</button>
+                    <button class="filter-tab" data-filter="grasses">🌾 Grasses</button>
+                    <button class="filter-tab" data-filter="forbs">🌸 Forbs</button>
+                    <button class="filter-tab" data-filter="sedges">🪴 Sedges</button>
+                    <button class="filter-tab" data-filter="vines">🌱 Vines</button>
+                    <button class="filter-tab" data-filter="native">Native</button>
                     <button class="filter-tab" data-filter="exotic">Exotic</button>
                     <button class="filter-tab" data-filter="indicator">Indicators</button>
                 </div>
@@ -1239,6 +1266,11 @@
                     <span class="menu-item-icon">🦋</span>
                     <span>Life List</span>
                 </div>
+                <div style="border-top: 1px solid #e0e0e0; margin: 8px 0;"></div>
+                <div class="menu-item" onclick="openCsvImportModal(); toggleMenu();">
+                    <span class="menu-item-icon">📊</span>
+                    <span>Import CSV</span>
+                </div>
             </div>
         </div>
     </div>
@@ -1264,9 +1296,12 @@
                 <div class="form-group">
                     <label class="form-label">Category *</label>
                     <select class="form-select" id="edit-category-select" required>
+                        <option value="trees">Trees</option>
+                        <option value="shrubs">Shrubs</option>
                         <option value="grasses">Grasses</option>
                         <option value="forbs">Forbs</option>
                         <option value="sedges">Sedges/Rushes</option>
+                        <option value="vines">Vines</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1331,6 +1366,39 @@
         </div>
     </div>
 
+    <!-- CSV Import Modal -->
+    <div class="modal" id="csv-import-modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">📊 Import Species from CSV</div>
+            <p style="color:#666; font-size:14px; margin-bottom:16px;">Upload a CSV file with species data. Use the <strong>eflora_species_master.csv</strong> template.</p>
+            
+            <div class="form-group">
+                <label class="form-label">Choose CSV File</label>
+                <input type="file" id="csv-file-input" accept=".csv" style="display:block; width:100%; padding:10px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px;">
+            </div>
+            
+            <div id="csv-preview" style="display:none; margin-top:20px;">
+                <h4 style="margin-bottom:10px; color:#2d5016;">Preview (first 10 rows)</h4>
+                <div style="max-height:300px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:8px; padding:10px; background:#f8f9fa;">
+                    <table id="csv-preview-table" style="width:100%; font-size:12px; border-collapse:collapse;">
+                        <thead id="csv-preview-header"></thead>
+                        <tbody id="csv-preview-body"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:10px; padding:10px; background:#e3f2fd; border-radius:6px; font-size:13px;">
+                    <strong id="csv-import-count">0</strong> species ready to import
+                </div>
+            </div>
+            
+            <div id="csv-status" style="margin-top:10px; font-size:13px; display:none;"></div>
+            
+            <div class="form-buttons" style="margin-top:20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeCsvImportModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" id="csv-import-btn" onclick="importCsvSpecies()" disabled>Import Species</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Import Modal -->
     <div class="modal" id="import-modal">
         <div class="modal-content">
@@ -1364,9 +1432,12 @@
                 <div class="form-group">
                     <label class="form-label">Category *</label>
                     <select class="form-select" id="category" required>
+                        <option value="trees">Trees</option>
+                        <option value="shrubs">Shrubs</option>
                         <option value="grasses">Grasses</option>
                         <option value="forbs">Forbs</option>
                         <option value="sedges">Sedges/Rushes</option>
+                        <option value="vines">Vines</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1536,7 +1607,37 @@
         const dbManager = new IndexedDBManager();
 
         // Species Data
+        // Family lookup for species
+        const familyLookup = {
+            'Themeda triandra': 'Poaceae',
+            'Bothriochloa macra': 'Poaceae',
+            'Rytidosperma spp.': 'Poaceae',
+            'Austrostipa spp.': 'Poaceae',
+            'Austrostipa bigeniculata': 'Poaceae',
+            'Microlaena stipoides': 'Poaceae',
+            'Poa sieberiana var. sieberiana': 'Poaceae',
+            'Poa labillardierei var. labillardierei': 'Poaceae',
+            'Wahlenbergia planiflora': 'Campanulaceae',
+            'Desmodium varians': 'Fabaceae',
+            'Desmodium brachypodum': 'Fabaceae',
+            'Scleranthus biflorus': 'Caryophyllaceae',
+            'Vittadinia muelleri': 'Asteraceae',
+            'Vittadinia cuneata var. cuneata': 'Asteraceae',
+            'Brachyscome aculeata': 'Asteraceae',
+            'Brachyscome rigidula': 'Asteraceae',
+            'Bulbine bulbosa': 'Asphodelaceae',
+            'Chrysocephalus apiculatus': 'Asteraceae',
+            'Lomandra longifolia': 'Asparagaceae',
+            'Lomandra multiflora': 'Asparagaceae',
+            'Lomandra filiformis': 'Asparagaceae',
+            'Carex inversa': 'Cyperaceae',
+            'Juncus australis': 'Juncaceae',
+            'Schoenus apogon': 'Cyperaceae'
+        };
+        
         const speciesData = {
+            trees: [],
+            shrubs: [],
             grasses: [
                 { scientific: "Themeda triandra", common: "Kangaroo Grass", status: "native", indicator: false, page: "" },
                 { scientific: "Bothriochloa macra", common: "Red Grass", status: "native", indicator: false, page: "" },
@@ -1669,13 +1770,15 @@
                 { scientific: "Lomandra multiflora", common: "Many-flowered Mat-rush", status: "native", indicator: true, page: "" },
                 { scientific: "Lomandra filiformis", common: "Wattle Mat-rush", status: "native", indicator: true, page: "" },
                 { scientific: "Schoenus apogon", common: "Common Bog-rush", status: "native", indicator: false, page: "" }
-            ]
+            ],
+            vines: []
         };
         // Global State
         let currentPage = 'home';
         let activeFilters = new Set(['all']);
         let galleryFilters = new Set(['all']);
-        let customSpecies = { grasses: [], forbs: [], sedges: [] };
+        let habitatFilters = new Set();
+        let customSpecies = { trees: [], shrubs: [], grasses: [], forbs: [], sedges: [], vines: [] };
         let savedLists = [];
         let currentPhotoItemId = null;
         let currentPhotoData = null;
@@ -1901,7 +2004,7 @@
             
             let html = '';
             
-            for (const category of ['grasses', 'forbs', 'sedges']) {
+            for (const category of ['trees', 'shrubs', 'grasses', 'forbs', 'sedges', 'vines']) {
                 if (!matchesFilter(category)) continue;
                 
                 const allSpecies = [...speciesData[category], ...customSpecies[category]];
@@ -1909,7 +2012,15 @@
                 
                 if (filtered.length === 0) continue;
                 
-                const icon = category === 'grasses' ? '🌾' : category === 'forbs' ? '🌸' : '🌿';
+                const icons = {
+                    trees: '🌳',
+                    shrubs: '🌿', 
+                    grasses: '🌾',
+                    forbs: '🌸',
+                    sedges: '🪴',
+                    vines: '🌱'
+                };
+                const icon = icons[category] || '🌿';
                 html += `<div class="category-header">${icon} ${category.charAt(0).toUpperCase() + category.slice(1)}</div>`;
                 
                 for (let i = 0; i < allSpecies.length; i++) {
@@ -2079,6 +2190,26 @@
                         }
                         
                         await renderGallery();
+                    }
+                });
+            }
+            
+            // Habitat filters
+            const habitatFilterTabs = document.getElementById('habitat-filter-tabs');
+            if (habitatFilterTabs) {
+                habitatFilterTabs.addEventListener('click', async (e) => {
+                    if (e.target.classList.contains('filter-tab')) {
+                        const habitat = e.target.dataset.habitat;
+                        
+                        if (habitatFilters.has(habitat)) {
+                            habitatFilters.delete(habitat);
+                            e.target.classList.remove('active');
+                        } else {
+                            habitatFilters.add(habitat);
+                            e.target.classList.add('active');
+                        }
+                        
+                        await renderSpecies();
                     }
                 });
             }
@@ -2294,6 +2425,27 @@
             }
         }
 
+        function toggleHabitatFilters() {
+            const section = document.getElementById('habitat-filters-section');
+            const btn = document.getElementById('toggle-habitat-btn');
+            
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                btn.textContent = '− Hide Habitat Filters';
+                btn.style.background = '#e8f5e9';
+                btn.style.borderColor = '#4caf50';
+                btn.style.color = '#2d5016';
+                btn.style.fontWeight = '600';
+            } else {
+                section.style.display = 'none';
+                btn.textContent = '+ Show Habitat Filters (Optional)';
+                btn.style.background = '#f8f9fa';
+                btn.style.borderColor = '#e0e0e0';
+                btn.style.color = '#666';
+                btn.style.fontWeight = 'normal';
+            }
+        }
+
         function closeMenuOnOutsideClick(event) {
             if (event.target.id === 'menu-modal') {
                 toggleMenu();
@@ -2313,7 +2465,7 @@
             if (page === 'home') {
                 document.getElementById('home-page').classList.add('active');
                 document.querySelector('.menu-item').classList.add('active');
-                document.getElementById('page-subtitle').textContent = 'Flora Species Checklist';
+                document.getElementById('page-subtitle').textContent = 'Molonglo Valley Field Guide';
             } else if (page === 'gallery') {
                 document.getElementById('gallery-page').classList.add('active');
                 document.querySelectorAll('.menu-item')[1].classList.add('active');
@@ -2339,7 +2491,7 @@
             const container = document.getElementById('gallery-grid');
             let html = '';
             
-            for (const category of ['grasses', 'forbs', 'sedges']) {
+            for (const category of ['trees', 'shrubs', 'grasses', 'forbs', 'sedges', 'vines']) {
                 // Check category filter
                 if (!galleryFilters.has('all') && !galleryFilters.has(category)) {
                     continue;
@@ -2689,9 +2841,18 @@
                 });
             });
             
-            const lifeList = Array.from(uniqueSpeciesMap.values()).sort((a, b) => 
-                a.scientific.localeCompare(b.scientific)
-            );
+            const lifeList = Array.from(uniqueSpeciesMap.values());
+            
+            // Sort by family, then by scientific name within family
+            lifeList.sort((a, b) => {
+                const familyA = familyLookup[a.scientific] || 'Unknown';
+                const familyB = familyLookup[b.scientific] || 'Unknown';
+                
+                if (familyA !== familyB) {
+                    return familyA.localeCompare(familyB);
+                }
+                return a.scientific.localeCompare(b.scientific);
+            });
             
             // Update stats
             const nativeCount = lifeList.filter(s => s.status === 'native').length;
@@ -2714,20 +2875,21 @@
                 return;
             }
             
-            // Group by category
-            const byCategory = {
-                grasses: lifeList.filter(s => s.category === 'grasses'),
-                forbs: lifeList.filter(s => s.category === 'forbs'),
-                sedges: lifeList.filter(s => s.category === 'sedges')
-            };
+            // Group by family
+            const byFamily = {};
+            lifeList.forEach(sp => {
+                const family = familyLookup[sp.scientific] || 'Unknown Family';
+                if (!byFamily[family]) {
+                    byFamily[family] = [];
+                }
+                byFamily[family].push(sp);
+            });
             
             let html = '';
             
-            for (const [category, species] of Object.entries(byCategory)) {
-                if (species.length === 0) continue;
-                
-                const icon = category === 'grasses' ? '🌾' : category === 'forbs' ? '🌸' : '🌿';
-                html += `<div class="category-header">${icon} ${category.charAt(0).toUpperCase() + category.slice(1)} (${species.length})</div>`;
+            // Render by family groups
+            for (const [family, species] of Object.entries(byFamily)) {
+                html += `<div class="category-header">📚 ${family} (${species.length})</div>`;
                 
                 species.forEach(sp => {
                     html += `
@@ -2758,6 +2920,203 @@
             document.getElementById('import-modal').classList.remove('active');
             document.getElementById('import-file-input').value = '';
             document.getElementById('import-status').style.display = 'none';
+        }
+
+        // CSV Import Functions
+        let csvData = [];
+        
+        function openCsvImportModal() {
+            document.getElementById('csv-import-modal').classList.add('active');
+            document.getElementById('csv-file-input').addEventListener('change', handleCsvFile);
+        }
+        
+        function closeCsvImportModal() {
+            document.getElementById('csv-import-modal').classList.remove('active');
+            document.getElementById('csv-file-input').value = '';
+            document.getElementById('csv-preview').style.display = 'none';
+            document.getElementById('csv-status').style.display = 'none';
+            document.getElementById('csv-import-btn').disabled = true;
+            csvData = [];
+        }
+        
+        function handleCsvFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    parseCsv(text);
+                } catch (error) {
+                    showCsvStatus('Error reading CSV file: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseCsv(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) {
+                showCsvStatus('CSV file is empty or invalid', 'error');
+                return;
+            }
+            
+            // Parse header
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            
+            // Parse rows
+            csvData = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const values = parseCSVLine(line);
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                
+                // Validate required fields
+                if (row.scientific_name && row.category) {
+                    csvData.push(row);
+                }
+            }
+            
+            if (csvData.length === 0) {
+                showCsvStatus('No valid species found in CSV', 'error');
+                return;
+            }
+            
+            showCsvPreview(headers, csvData);
+        }
+        
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+        
+        function showCsvPreview(headers, data) {
+            const preview = document.getElementById('csv-preview');
+            const headerRow = document.getElementById('csv-preview-header');
+            const bodyRows = document.getElementById('csv-preview-body');
+            const count = document.getElementById('csv-import-count');
+            const importBtn = document.getElementById('csv-import-btn');
+            
+            preview.style.display = 'block';
+            
+            // Show header
+            headerRow.innerHTML = '<tr>' + 
+                ['Scientific Name', 'Common Name', 'Category', 'Status', 'Family', 'Habitat'].map(h => 
+                    `<th style="border-bottom:2px solid #4a7c2c; padding:8px; text-align:left; background:#f0f7ed;">${h}</th>`
+                ).join('') + 
+                '</tr>';
+            
+            // Show first 10 rows
+            bodyRows.innerHTML = data.slice(0, 10).map(row => 
+                '<tr style="border-bottom:1px solid #e0e0e0;">' +
+                    `<td style="padding:6px; font-style:italic;">${row.scientific_name}</td>` +
+                    `<td style="padding:6px;">${row.common_name}</td>` +
+                    `<td style="padding:6px;">${row.category}</td>` +
+                    `<td style="padding:6px;"><span class="species-badge badge-${row.status}">${row.status}</span></td>` +
+                    `<td style="padding:6px; font-size:11px;">${row.family || ''}</td>` +
+                    `<td style="padding:6px; font-size:11px;">${row.habitat || ''}</td>` +
+                '</tr>'
+            ).join('');
+            
+            count.textContent = data.length;
+            importBtn.disabled = false;
+        }
+        
+        async function importCsvSpecies() {
+            if (csvData.length === 0) {
+                showCsvStatus('No data to import', 'error');
+                return;
+            }
+            
+            const importBtn = document.getElementById('csv-import-btn');
+            importBtn.disabled = true;
+            importBtn.textContent = 'Importing...';
+            
+            let imported = 0;
+            let skipped = 0;
+            
+            for (const row of csvData) {
+                const category = row.category;
+                const scientific = row.scientific_name;
+                
+                // Check if species already exists
+                const allSpecies = [...speciesData[category], ...customSpecies[category]];
+                const exists = allSpecies.some(s => s.scientific === scientific);
+                
+                if (exists) {
+                    skipped++;
+                    continue;
+                }
+                
+                // Add to custom species
+                const newSpecies = {
+                    scientific: scientific,
+                    common: row.common_name || '',
+                    status: row.status || 'native',
+                    indicator: row.indicator === 'TRUE' || row.indicator === 'true',
+                    page: row.page || '',
+                    notes: row.notes || ''
+                };
+                
+                customSpecies[category].push(newSpecies);
+                
+                // Add to family lookup if provided
+                if (row.family) {
+                    familyLookup[scientific] = row.family;
+                }
+                
+                imported++;
+            }
+            
+            // Save to database
+            await dbManager.set(STORES.customSpecies, 'species', customSpecies);
+            
+            // Refresh views
+            await renderSpecies();
+            await updateStats();
+            
+            // Show success message
+            showCsvStatus(`✓ Imported ${imported} species (${skipped} skipped as duplicates)`, 'success');
+            importBtn.textContent = 'Import Complete!';
+            
+            setTimeout(() => {
+                closeCsvImportModal();
+            }, 2000);
+        }
+        
+        function showCsvStatus(message, type) {
+            const status = document.getElementById('csv-status');
+            status.textContent = message;
+            status.style.display = 'block';
+            status.style.color = type === 'error' ? '#c92a2a' : '#4a7c2c';
         }
 
         async function importData() {
