@@ -3596,6 +3596,17 @@
             
             const lifeList = Array.from(uniqueSpeciesMap.values());
             
+            // Get photos for each species
+            const allPhotos = await dbManager.getAll(STORES.photos);
+            const photoMap = new Map();
+            
+            allPhotos.forEach(photoRecord => {
+                const itemId = photoRecord.itemId;
+                if (!photoMap.has(itemId)) {
+                    photoMap.set(itemId, photoRecord.photo);
+                }
+            });
+            
             // Sort by family, then by scientific name within family
             lifeList.sort((a, b) => {
                 const familyA = familyLookup[a.scientific] || 'Unknown';
@@ -3645,9 +3656,24 @@
                 html += `<div class="category-header">📚 ${family} (${species.length})</div>`;
                 
                 species.forEach(sp => {
+                    const itemId = `${sp.category}-${sp.scientific.replace(/\s+/g, '_')}`;
+                    const photoData = photoMap.get(itemId);
+                    
                     html += `
-                        <div class="species-item ${sp.status}">
-                            <div class="species-info">
+                        <div class="species-item ${sp.status}" style="display:flex; gap:12px; align-items:center;">
+                            ${photoData ? `
+                                <div style="flex-shrink:0;">
+                                    <img src="${photoData}" 
+                                         alt="${sp.scientific}" 
+                                         onclick="openPhotoViewer('${itemId}')"
+                                         style="width:60px; height:60px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid #e0e0e0;">
+                                </div>
+                            ` : `
+                                <div style="flex-shrink:0; width:60px; height:60px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px; border:2px solid #e0e0e0;">
+                                    📷
+                                </div>
+                            `}
+                            <div class="species-info" style="flex:1;">
                                 <div class="species-scientific">${sp.scientific} ${sp.indicator ? '⭐' : ''}</div>
                                 <div class="species-common">${sp.common}</div>
                                 <div class="species-status-badge ${sp.status}">${sp.status}</div>
