@@ -166,7 +166,7 @@
         .gallery-card-images {
             position: relative;
             width: 100%;
-            height: 250px;
+            height: 125px;
             background: #f0f0f0;
         }
 
@@ -1113,7 +1113,7 @@
                 <div style="font-size:13px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
                     🔍 Growth Form
                 </div>
-                <div class="filter-tabs" style="margin-bottom:20px;">
+                <div class="filter-tabs" style="margin-bottom:30px;">
                     <button class="filter-tab active" data-filter="all">All</button>
                     <button class="filter-tab" data-filter="trees">🌳 Trees</button>
                     <button class="filter-tab" data-filter="shrubs">🌿 Shrubs</button>
@@ -2435,10 +2435,23 @@
                 
                 const page = await getPageNumber(itemId);
                 const photos = await getPhotos(itemId);
+                const photoData = photos.length > 0 ? photos[0] : null;
                 
                 html += `
-                    <div class="species-item ${species.status}">
-                        <div class="species-info">
+                    <div class="species-item ${species.status}" style="display:flex; gap:12px; align-items:center;">
+                        ${photoData ? `
+                            <div style="flex-shrink:0;">
+                                <img src="${photoData}" 
+                                     alt="${species.scientific}" 
+                                     onclick="viewPhoto('${itemId}', 0)"
+                                     style="width:60px; height:60px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid #e0e0e0;">
+                            </div>
+                        ` : `
+                            <div style="flex-shrink:0; width:60px; height:60px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px; border:2px solid #e0e0e0;">
+                                📷
+                            </div>
+                        `}
+                        <div class="species-info" style="flex:1;">
                             <div class="species-scientific">${species.scientific} ${species.indicator ? '⭐' : ''}</div>
                             <div class="species-common">${species.common}</div>
                             <div class="species-status-badge ${species.status}">${species.status}</div>
@@ -3589,16 +3602,22 @@
             
             const lifeList = Array.from(uniqueSpeciesMap.values());
             
-            // Get photos for each species
+            // Get photos for each species - need to find correct itemId
             const allPhotos = await dbManager.getAll(STORES.photos);
-            const photoMap = new Map();
             
-            allPhotos.forEach(photoRecord => {
-                const itemId = photoRecord.itemId;
-                if (!photoMap.has(itemId)) {
-                    photoMap.set(itemId, photoRecord.photo);
+            // Helper function to find itemId for a species
+            function findItemId(category, scientific) {
+                const allSpecies = [...speciesData[category], ...customSpecies[category]];
+                for (let i = 0; i < allSpecies.length; i++) {
+                    if (allSpecies[i].scientific === scientific) {
+                        const isCustom = i >= speciesData[category].length;
+                        return isCustom ? 
+                            `custom-${category}-${i - speciesData[category].length}` : 
+                            `${category}-${i}`;
+                    }
                 }
-            });
+                return null;
+            }
             
             // Sort by family, then by scientific name within family
             lifeList.sort((a, b) => {
@@ -3648,9 +3667,10 @@
             for (const [family, species] of Object.entries(byFamily)) {
                 html += `<div class="category-header">📚 ${family} (${species.length})</div>`;
                 
-                species.forEach(sp => {
-                    const itemId = `${sp.category}-${sp.scientific.replace(/\s+/g, '_')}`;
-                    const photoData = photoMap.get(itemId);
+                for (const sp of species) {
+                    const itemId = findItemId(sp.category, sp.scientific);
+                    const photos = itemId ? await getPhotos(itemId) : [];
+                    const photoData = photos.length > 0 ? photos[0] : null;
                     
                     html += `
                         <div class="species-item ${sp.status}" style="display:flex; gap:12px; align-items:center;">
@@ -3658,7 +3678,7 @@
                                 <div style="flex-shrink:0;">
                                     <img src="${photoData}" 
                                          alt="${sp.scientific}" 
-                                         onclick="openPhotoViewer('${itemId}')"
+                                         onclick="viewPhoto('${itemId}', 0)"
                                          style="width:60px; height:60px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid #e0e0e0;">
                                 </div>
                             ` : `
@@ -3677,7 +3697,7 @@
                             </div>
                         </div>
                     `;
-                });
+                }
             }
             
             container.innerHTML = html;
