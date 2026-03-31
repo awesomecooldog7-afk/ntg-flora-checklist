@@ -145,8 +145,16 @@
         .gallery-grid {
             padding: 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 10px;
+            }
         }
 
         .gallery-card {
@@ -156,23 +164,18 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: all 0.2s;
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .gallery-card:hover {
             box-shadow: 0 4px 16px rgba(0,0,0,0.15);
             transform: translateY(-2px);
         }
-
-        .gallery-card-images {
-            position: relative;
+        
+        .gallery-card img {
             width: 100%;
-            height: 125px;
-            background: #f0f0f0;
-        }
-
-        .gallery-card-image {
-            width: 100%;
-            height: 100%;
+            aspect-ratio: 1 / 1;
             object-fit: cover;
             cursor: pointer;
         }
@@ -3660,12 +3663,25 @@
 
         // Life List functions
         async function renderLifeList() {
+            console.log('renderLifeList called');
             const container = document.getElementById('life-list-container');
+            
+            if (!container) {
+                console.error('Life list container not found!');
+                return;
+            }
+            
+            console.log('Saved lists:', savedLists.length);
             
             // Collect all unique species from all saved lists
             const uniqueSpeciesMap = new Map();
             
             savedLists.forEach(list => {
+                console.log('Processing list:', list.title, 'Species count:', list.species?.length);
+                if (!list.species) {
+                    console.warn('List has no species array:', list);
+                    return;
+                }
                 list.species.forEach(sp => {
                     if (!uniqueSpeciesMap.has(sp.scientific)) {
                         uniqueSpeciesMap.set(sp.scientific, {
@@ -3693,6 +3709,7 @@
             });
             
             const lifeList = Array.from(uniqueSpeciesMap.values());
+            console.log('Unique species in life list:', lifeList.length);
             
             // Get photos for each species - need to find correct itemId
             const allPhotos = await dbManager.getAll(STORES.photos);
@@ -3733,6 +3750,7 @@
             document.getElementById('life-list-indicators').textContent = indicatorCount;
             
             if (lifeList.length === 0) {
+                console.log('No species in life list - showing empty state');
                 container.innerHTML = `
                     <div class="empty-lists">
                         <div class="empty-lists-icon">🦋</div>
@@ -3753,50 +3771,65 @@
                 byFamily[family].push(sp);
             });
             
+            console.log('Families in life list:', Object.keys(byFamily).length);
+            
             let html = '';
             
-            // Render by family groups
-            for (const [family, species] of Object.entries(byFamily)) {
-                html += `<div class="category-header">📚 ${family} (${species.length})</div>`;
-                
-                // Process all species in parallel for this family
-                const speciesHtmlPromises = species.map(async (sp) => {
-                    const itemId = findItemId(sp.category, sp.scientific);
-                    const photos = itemId ? await getPhotos(itemId) : [];
-                    const photoData = photos.length > 0 ? photos[0] : null;
+            try {
+                // Render by family groups
+                for (const [family, species] of Object.entries(byFamily)) {
+                    html += `<div class="category-header">📚 ${family} (${species.length})</div>`;
                     
-                    return `
-                        <div class="species-item ${sp.status}" style="display:flex; gap:12px; align-items:center;">
-                            ${photoData ? `
-                                <div style="flex-shrink:0;">
-                                    <img src="${photoData}" 
-                                         alt="${sp.scientific}" 
-                                         onclick="viewPhoto('${itemId}', 0)"
-                                         style="width:60px; height:60px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid #e0e0e0;">
-                                </div>
-                            ` : `
-                                <div style="flex-shrink:0; width:60px; height:60px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px; border:2px solid #e0e0e0;">
-                                    📷
-                                </div>
-                            `}
-                            <div class="species-info" style="flex:1;">
-                                <div class="species-scientific">${sp.scientific} ${sp.indicator ? '⭐' : ''}</div>
-                                <div class="species-common">${sp.common}</div>
-                                <div class="species-status-badge ${sp.status}">${sp.status}</div>
-                                <div style="font-size:11px; color:#666; margin-top:4px;">
-                                    First seen: ${new Date(sp.firstSeen).toLocaleDateString('en-AU')} • 
-                                    Found in ${sp.surveyCount} survey${sp.surveyCount > 1 ? 's' : ''}
+                    // Process all species in parallel for this family
+                    const speciesHtmlPromises = species.map(async (sp) => {
+                        const itemId = findItemId(sp.category, sp.scientific);
+                        const photos = itemId ? await getPhotos(itemId) : [];
+                        const photoData = photos.length > 0 ? photos[0] : null;
+                        
+                        return `
+                            <div class="species-item ${sp.status}" style="display:flex; gap:12px; align-items:center;">
+                                ${photoData ? `
+                                    <div style="flex-shrink:0;">
+                                        <img src="${photoData}" 
+                                             alt="${sp.scientific}" 
+                                             onclick="viewPhoto('${itemId}', 0)"
+                                             style="width:60px; height:60px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid #e0e0e0;">
+                                    </div>
+                                ` : `
+                                    <div style="flex-shrink:0; width:60px; height:60px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px; border:2px solid #e0e0e0;">
+                                        📷
+                                    </div>
+                                `}
+                                <div class="species-info" style="flex:1;">
+                                    <div class="species-scientific">${sp.scientific} ${sp.indicator ? '⭐' : ''}</div>
+                                    <div class="species-common">${sp.common}</div>
+                                    <div class="species-status-badge ${sp.status}">${sp.status}</div>
+                                    <div style="font-size:11px; color:#666; margin-top:4px;">
+                                        First seen: ${new Date(sp.firstSeen).toLocaleDateString('en-AU')} • 
+                                        Found in ${sp.surveyCount} survey${sp.surveyCount > 1 ? 's' : ''}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                });
+                        `;
+                    });
+                    
+                    const speciesHtmlArray = await Promise.all(speciesHtmlPromises);
+                    html += speciesHtmlArray.join('');
+                }
                 
-                const speciesHtmlArray = await Promise.all(speciesHtmlPromises);
-                html += speciesHtmlArray.join('');
+                console.log('Rendering life list HTML, length:', html.length);
+                container.innerHTML = html;
+                console.log('✓ Life list rendered successfully');
+            } catch (error) {
+                console.error('Error rendering life list:', error);
+                container.innerHTML = `
+                    <div class="empty-lists">
+                        <div class="empty-lists-icon">⚠️</div>
+                        <p>Error loading life list</p>
+                        <p style="font-size:14px;">${error.message}</p>
+                    </div>
+                `;
             }
-            
-            container.innerHTML = html;
         }
 
         async function renderSurveyMap() {
