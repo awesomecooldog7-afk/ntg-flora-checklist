@@ -3442,45 +3442,66 @@
         }
         
         function setupMapClickHandler(initialLat, initialLng) {
-            // Create a simple HTML map that allows clicking
-            const mapHtml = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
-                    <style>
-                        body { margin: 0; padding: 0; }
-                        #map { width: 100vw; height: 100vh; }
-                    </style>
-                </head>
-                <body>
-                    <div id="map"></div>
-                    <script>
-                        const map = L.map('map').setView([${initialLat}, ${initialLng}], 13);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OpenStreetMap contributors'
-                        }).addTo(map);
-                        
-                        let marker = L.marker([${initialLat}, ${initialLng}]).addTo(map);
-                        
-                        map.on('click', function(e) {
-                            marker.setLatLng(e.latlng);
-                            window.parent.postMessage({
-                                type: 'mapClick',
-                                lat: e.latlng.lat,
-                                lng: e.latlng.lng
-                            }, '*');
-                        });
-                    <\/script>
-                </body>
-                </html>
-            `;
+            console.log('setupMapClickHandler called with coords:', initialLat, initialLng);
             
+            // Create a simple HTML map that allows clicking
+            const mapHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        console.log('Map picker iframe loaded');
+        console.log('Leaflet version:', L.version);
+        
+        try {
+            const map = L.map('map').setView([${initialLat}, ${initialLng}], 13);
+            console.log('Map initialized');
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            console.log('Tiles added');
+            
+            let marker = L.marker([${initialLat}, ${initialLng}]).addTo(map);
+            console.log('Marker added');
+            
+            map.on('click', function(e) {
+                console.log('Map clicked at:', e.latlng);
+                marker.setLatLng(e.latlng);
+                window.parent.postMessage({
+                    type: 'mapClick',
+                    lat: e.latlng.lat,
+                    lng: e.latlng.lng
+                }, '*');
+            });
+            
+            console.log('Map picker ready');
+        } catch (error) {
+            console.error('Error initializing map picker:', error);
+            document.body.innerHTML = '<div style="padding:20px;color:red;">Error: ' + error.message + '</div>';
+        }
+    <\/script>
+</body>
+</html>`;
+            
+            console.log('Setting iframe srcdoc');
             const iframe = document.getElementById('map-iframe');
+            if (!iframe) {
+                console.error('Map iframe element not found!');
+                return;
+            }
             iframe.srcdoc = mapHtml;
+            console.log('Map picker iframe srcdoc set');
         }
         
         // Listen for map clicks
@@ -3716,12 +3737,21 @@
             
             // Helper function to find itemId for a species
             function findItemId(category, scientific) {
-                const allSpecies = [...speciesData[category], ...customSpecies[category]];
+                // Validate category exists
+                if (!category || !speciesData[category]) {
+                    console.warn('Invalid category:', category, 'for species:', scientific);
+                    return null;
+                }
+                
+                const builtInSpecies = speciesData[category] || [];
+                const customSpeciesList = customSpecies[category] || [];
+                const allSpecies = [...builtInSpecies, ...customSpeciesList];
+                
                 for (let i = 0; i < allSpecies.length; i++) {
                     if (allSpecies[i].scientific === scientific) {
-                        const isCustom = i >= speciesData[category].length;
+                        const isCustom = i >= builtInSpecies.length;
                         return isCustom ? 
-                            `custom-${category}-${i - speciesData[category].length}` : 
+                            `custom-${category}-${i - builtInSpecies.length}` : 
                             `${category}-${i}`;
                     }
                 }
@@ -3835,8 +3865,12 @@
         async function renderSurveyMap() {
             const container = document.getElementById('survey-map-container');
             
+            console.log('renderSurveyMap called, savedLists:', savedLists.length);
+            
             // Filter lists with GPS coordinates
             const listsWithGps = savedLists.filter(list => list.gps && list.gps.trim());
+            
+            console.log('Lists with GPS:', listsWithGps.length);
             
             if (listsWithGps.length === 0) {
                 container.innerHTML = `
@@ -3850,84 +3884,99 @@
             }
             
             // Create map HTML with Leaflet
-            const mapHtml = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
-                    <style>
-                        body { margin: 0; padding: 0; }
-                        #map { width: 100vw; height: 100vh; }
-                        .popup-title { font-weight: bold; margin-bottom: 8px; color: #1a472a; }
-                        .popup-info { font-size: 13px; color: #666; margin: 4px 0; }
-                        .popup-date { font-size: 12px; color: #999; margin-top: 8px; }
-                    </style>
-                </head>
-                <body>
-                    <div id="map"></div>
-                    <script>
-                        const surveys = ${JSON.stringify(listsWithGps.map(list => ({
-                            title: list.title,
-                            gps: list.gps,
-                            location: list.location,
-                            date: list.date,
-                            speciesCount: list.species.length
-                        })))};
-                        
-                        // Calculate center point
-                        let totalLat = 0, totalLng = 0;
-                        const validCoords = [];
-                        
-                        surveys.forEach(survey => {
-                            const parts = survey.gps.split(',');
-                            if (parts.length === 2) {
-                                const lat = parseFloat(parts[0].trim());
-                                const lng = parseFloat(parts[1].trim());
-                                if (!isNaN(lat) && !isNaN(lng)) {
-                                    totalLat += lat;
-                                    totalLng += lng;
-                                    validCoords.push({ ...survey, lat, lng });
-                                }
-                            }
-                        });
-                        
-                        const centerLat = totalLat / validCoords.length || -35.3;
-                        const centerLng = totalLng / validCoords.length || 149.1;
-                        
-                        const map = L.map('map').setView([centerLat, centerLng], 12);
-                        
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OpenStreetMap contributors'
-                        }).addTo(map);
-                        
-                        // Add markers for each survey
-                        validCoords.forEach((survey, index) => {
-                            const marker = L.marker([survey.lat, survey.lng]).addTo(map);
-                            
-                            const popupContent = \`
-                                <div class="popup-title">\${survey.title}</div>
-                                <div class="popup-info">📍 \${survey.location || 'Location not specified'}</div>
-                                <div class="popup-info">🌿 \${survey.speciesCount} species</div>
-                                <div class="popup-date">\${new Date(survey.date).toLocaleDateString('en-AU')}</div>
-                            \`;
-                            
-                            marker.bindPopup(popupContent);
-                        });
-                        
-                        // Fit bounds if multiple markers
-                        if (validCoords.length > 1) {
-                            const bounds = L.latLngBounds(validCoords.map(c => [c.lat, c.lng]));
-                            map.fitBounds(bounds, { padding: [50, 50] });
-                        }
-                    <\/script>
-                </body>
-                </html>
-            `;
+            const mapHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { width: 100vw; height: 100vh; }
+        .popup-title { font-weight: bold; margin-bottom: 8px; color: #1a472a; }
+        .popup-info { font-size: 13px; color: #666; margin: 4px 0; }
+        .popup-date { font-size: 12px; color: #999; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        console.log('Map iframe loaded');
+        const surveys = ${JSON.stringify(listsWithGps.map(list => ({
+            title: list.title,
+            gps: list.gps,
+            location: list.location,
+            date: list.date,
+            speciesCount: list.species.length
+        })))};
+        
+        console.log('Surveys:', surveys.length);
+        
+        // Calculate center point
+        let totalLat = 0, totalLng = 0;
+        const validCoords = [];
+        
+        surveys.forEach(survey => {
+            const parts = survey.gps.split(',');
+            if (parts.length === 2) {
+                const lat = parseFloat(parts[0].trim());
+                const lng = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    totalLat += lat;
+                    totalLng += lng;
+                    validCoords.push({ ...survey, lat, lng });
+                }
+            }
+        });
+        
+        console.log('Valid coordinates:', validCoords.length);
+        
+        const centerLat = totalLat / validCoords.length || -35.3;
+        const centerLng = totalLng / validCoords.length || 149.1;
+        
+        console.log('Initializing map at:', centerLat, centerLng);
+        
+        try {
+            const map = L.map('map').setView([centerLat, centerLng], 12);
             
-            container.innerHTML = `<iframe srcdoc="${mapHtml.replace(/"/g, '&quot;')}" style="width:100%; height:100%; border:none;"></iframe>`;
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            console.log('Map tiles added');
+            
+            // Add markers for each survey
+            validCoords.forEach((survey, index) => {
+                const marker = L.marker([survey.lat, survey.lng]).addTo(map);
+                
+                const popupContent = '<div class="popup-title">' + survey.title + '</div>' +
+                    '<div class="popup-info">📍 ' + (survey.location || 'Location not specified') + '</div>' +
+                    '<div class="popup-info">🌿 ' + survey.speciesCount + ' species</div>' +
+                    '<div class="popup-date">' + new Date(survey.date).toLocaleDateString('en-AU') + '</div>';
+                
+                marker.bindPopup(popupContent);
+            });
+            
+            console.log('Markers added:', validCoords.length);
+            
+            // Fit bounds if multiple markers
+            if (validCoords.length > 1) {
+                const bounds = L.latLngBounds(validCoords.map(c => [c.lat, c.lng]));
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+            
+            console.log('Map fully initialized');
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            document.body.innerHTML = '<div style="padding:20px;color:red;">Error loading map: ' + error.message + '</div>';
+        }
+    <\/script>
+</body>
+</html>`;
+            
+            console.log('Creating iframe with map HTML');
+            container.innerHTML = '<iframe srcdoc="' + mapHtml.replace(/"/g, '&quot;') + '" style="width:100%; height:100%; border:none;"></iframe>';
         }
 
         function openImportModal() {
